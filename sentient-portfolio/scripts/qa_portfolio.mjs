@@ -259,6 +259,7 @@ async function main() {
     const desktopIcons = [
       'My Portfolio',
       'Games',
+      'Mini Games',
       '3D Models',
       'Local LLM',
       'Wallpapers',
@@ -270,9 +271,46 @@ async function main() {
     for (const label of desktopIcons) {
       await assertText(client, label);
     }
+    const desktopColumns = await evaluate(
+      client,
+      'getComputedStyle(document.querySelector(".desktop-grid")).gridTemplateColumns.split(" ").length',
+    );
+    if (desktopColumns < 2) {
+      fail('Desktop icons did not arrange into a cleaner multi-column launcher.');
+    }
 
     await assertClick(client, 'button', 'Start');
     await assertText(client, 'GitHub Repo');
+    await assertClick(client, '.start-items button', 'Mini Games');
+    await assertText(client, 'Mini Games Arcade');
+    await assertText(client, 'Snake');
+    await assertText(client, 'Snakes and Ladders');
+    await assertText(client, 'Moto GT');
+    await assertText(client, 'Speed 2D');
+    await assertText(client, 'Pixel Pong');
+    await assertClick(client, '.game-controls button', 'Start Snake');
+    await assertText(client, 'Score:');
+    const snakeHas3dStage = await evaluate(
+      client,
+      'document.querySelector(".snake-stage")?.classList.contains("game-3d")',
+    );
+    if (!snakeHas3dStage) {
+      fail('Snake game did not render inside the 3D-styled stage.');
+    }
+    await assertClick(client, '.cartridge-tabs button', 'Snakes and Ladders');
+    await assertClick(client, '.game-controls button', 'Roll Dice');
+    await assertText(client, 'Dice:');
+    await assertClick(client, '.cartridge-tabs button', 'Moto GT');
+    await assertClick(client, '.game-controls button', 'Start Race');
+    await assertText(client, 'Moto GT Score:');
+    await assertClick(client, '.cartridge-tabs button', 'Speed 2D');
+    await assertClick(client, '.game-controls button', 'Start Drive');
+    await assertText(client, 'Distance:');
+    await assertClick(client, '.cartridge-tabs button', 'Pixel Pong');
+    await assertClick(client, '.game-controls button', 'Start Pong');
+    await assertText(client, 'Pong Score:');
+
+    await assertClick(client, 'button', 'Start');
     await assertClick(client, '.start-items button', 'Wallpaper.cpl');
     await assertText(client, 'Desktop Wallpaper');
     const wallpaperNames = [

@@ -8,6 +8,7 @@ type AppId =
   | 'skills'
   | 'models'
   | 'llm'
+  | 'arcade'
   | 'wallpaper'
   | 'themes'
   | 'contact'
@@ -273,6 +274,7 @@ const appNames: Record<AppId, string> = {
   skills: 'Skills.cpl',
   models: 'Models',
   llm: 'Local LLM Apps',
+  arcade: 'Mini Games',
   wallpaper: 'Wallpaper.cpl',
   themes: 'Themes.cpl',
   contact: 'Contact',
@@ -389,14 +391,15 @@ export default function Page() {
     >
       <div className="desktop-grid" aria-label="Desktop shortcuts">
         <DesktopIcon label="My Portfolio" glyph="pc" onOpen={() => openApp('about')} />
+        <DesktopIcon label="Contact" glyph="mail" onOpen={() => openApp('contact')} />
+        <DesktopIcon label="Skills" glyph="tools" onOpen={() => openApp('skills')} />
+        <DesktopIcon label="Command" glyph="term" onOpen={() => openApp('terminal')} />
         <DesktopIcon label="Games" glyph="game" onOpen={() => openApp('games')} />
-        <DesktopIcon label="3D Models" glyph="cube" onOpen={() => openApp('models')} />
+        <DesktopIcon label="Mini Games" glyph="joystick" onOpen={() => openApp('arcade')} />
         <DesktopIcon label="Local LLM" glyph="brain" onOpen={() => openApp('llm')} />
+        <DesktopIcon label="3D Models" glyph="cube" onOpen={() => openApp('models')} />
         <DesktopIcon label="Wallpapers" glyph="paint" onOpen={() => openApp('wallpaper')} />
         <DesktopIcon label="Themes" glyph="gear" onOpen={() => openApp('themes')} />
-        <DesktopIcon label="Skills" glyph="tools" onOpen={() => openApp('skills')} />
-        <DesktopIcon label="Contact" glyph="mail" onOpen={() => openApp('contact')} />
-        <DesktopIcon label="Command" glyph="term" onOpen={() => openApp('terminal')} />
       </div>
 
       <div className="window-layer">
@@ -534,7 +537,7 @@ function DesktopIcon({
   onOpen,
 }: {
   label: string;
-  glyph: 'pc' | 'game' | 'cube' | 'brain' | 'paint' | 'gear' | 'tools' | 'mail' | 'term';
+  glyph: 'pc' | 'game' | 'joystick' | 'cube' | 'brain' | 'paint' | 'gear' | 'tools' | 'mail' | 'term';
   onOpen: () => void;
 }) {
   return (
@@ -631,6 +634,8 @@ function AppContent({
       return <ModelsApp />;
     case 'llm':
       return <LocalLlmHub openApp={openApp} />;
+    case 'arcade':
+      return <MiniGamesApp />;
     case 'wallpaper':
       return <WallpaperApp selected={wallpaper} onSelect={setWallpaper} />;
     case 'themes':
@@ -927,6 +932,365 @@ function ContactApp() {
   );
 }
 
+type MiniGameId = 'snake' | 'ladders' | 'moto' | 'speed' | 'pong';
+
+const miniGameTabs: { id: MiniGameId; title: string; summary: string }[] = [
+  { id: 'snake', title: 'Snake', summary: 'Eat pixels, grow longer, avoid crashing.' },
+  { id: 'ladders', title: 'Snakes and Ladders', summary: 'Roll dice, climb ladders, dodge slides.' },
+  { id: 'moto', title: 'Moto GT', summary: 'Lane-switch a tiny racing bike past cones.' },
+  { id: 'speed', title: 'Speed 2D', summary: 'Need-for-speed style traffic dodging.' },
+  { id: 'pong', title: 'Pixel Pong', summary: 'Classic paddle reflex mini game.' },
+];
+
+function MiniGamesApp() {
+  const [selected, setSelected] = useState<MiniGameId>('snake');
+  const active = miniGameTabs.find((game) => game.id === selected) ?? miniGameTabs[0];
+
+  return (
+    <div className="mini-games-app">
+      <div className="toolbar">
+        <button type="button">Game</button>
+        <button type="button">Controls</button>
+        <button type="button">Score</button>
+      </div>
+      <div className="arcade-header">
+        <div>
+          <p className="eyebrow">C:\GAMES\MINI_ARCADE.EXE</p>
+          <h2>Mini Games Arcade</h2>
+          <p>{active.summary}</p>
+        </div>
+        <div className="arcade-marquee">5 CARTRIDGES</div>
+      </div>
+      <div className="cartridge-tabs" aria-label="Mini game cartridges">
+        {miniGameTabs.map((game) => (
+          <button
+            key={game.id}
+            className={selected === game.id ? 'active' : ''}
+            type="button"
+            onClick={() => setSelected(game.id)}
+          >
+            {game.title}
+          </button>
+        ))}
+      </div>
+      {selected === 'snake' && <SnakeMiniGame />}
+      {selected === 'ladders' && <SnakesAndLaddersMiniGame />}
+      {selected === 'moto' && <MotoGtMiniGame />}
+      {selected === 'speed' && <Speed2dMiniGame />}
+      {selected === 'pong' && <PixelPongMiniGame />}
+    </div>
+  );
+}
+
+function SnakeMiniGame() {
+  const [snake, setSnake] = useState([{ x: 5, y: 5 }]);
+  const [food, setFood] = useState({ x: 9, y: 7 });
+  const [direction, setDirection] = useState({ x: 1, y: 0 });
+  const [running, setRunning] = useState(false);
+  const [score, setScore] = useState(0);
+  const [status, setStatus] = useState('Press Start, then steer the snake.');
+
+  function reset() {
+    setSnake([{ x: 5, y: 5 }]);
+    setFood({ x: 9, y: 7 });
+    setDirection({ x: 1, y: 0 });
+    setScore(0);
+    setStatus('Snake ready.');
+    setRunning(true);
+  }
+
+  useEffect(() => {
+    if (!running) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => {
+      setSnake((current) => {
+        const head = current[0];
+        const nextHead = { x: head.x + direction.x, y: head.y + direction.y };
+        const hitWall = nextHead.x < 0 || nextHead.x > 11 || nextHead.y < 0 || nextHead.y > 11;
+        const hitSelf = current.some((segment) => segment.x === nextHead.x && segment.y === nextHead.y);
+        if (hitWall || hitSelf) {
+          setRunning(false);
+          setStatus(`Game over. Score ${score}.`);
+          return current;
+        }
+        const ateFood = nextHead.x === food.x && nextHead.y === food.y;
+        if (ateFood) {
+          setScore((value) => value + 1);
+          setFood({
+            x: (food.x * 5 + 3) % 12,
+            y: (food.y * 7 + 4) % 12,
+          });
+          return [nextHead, ...current];
+        }
+        return [nextHead, ...current.slice(0, -1)];
+      });
+    }, 260);
+    return () => window.clearInterval(timer);
+  }, [direction, food, running, score]);
+
+  return (
+    <section className="mini-game-panel game-3d snake-stage">
+      <div className="game-hud">
+        <span>Score: {score}</span>
+        <span>{status}</span>
+      </div>
+      <div className="snake-board" aria-label="Snake game board">
+        {Array.from({ length: 144 }, (_, index) => {
+          const x = index % 12;
+          const y = Math.floor(index / 12);
+          const isSnake = snake.some((segment) => segment.x === x && segment.y === y);
+          const isFood = food.x === x && food.y === y;
+          return <span key={`${x}-${y}`} className={`${isSnake ? 'snake-cell' : ''} ${isFood ? 'food-cell' : ''}`} />;
+        })}
+      </div>
+      <div className="game-controls">
+        <button type="button" onClick={reset}>Start Snake</button>
+        <button type="button" onClick={() => setDirection({ x: 0, y: -1 })}>Up</button>
+        <button type="button" onClick={() => setDirection({ x: -1, y: 0 })}>Left</button>
+        <button type="button" onClick={() => setDirection({ x: 1, y: 0 })}>Right</button>
+        <button type="button" onClick={() => setDirection({ x: 0, y: 1 })}>Down</button>
+      </div>
+    </section>
+  );
+}
+
+function SnakesAndLaddersMiniGame() {
+  const jumps: Record<number, number> = { 3: 16, 8: 21, 15: 5, 22: 34, 29: 11, 33: 24 };
+  const [position, setPosition] = useState(1);
+  const [dice, setDice] = useState(1);
+  const [log, setLog] = useState('Roll the dice to start.');
+
+  function rollDice() {
+    const nextDice = Math.floor(Math.random() * 6) + 1;
+    setDice(nextDice);
+    setPosition((current) => {
+      const rolled = current + nextDice > 36 ? current : current + nextDice;
+      const jumped = jumps[rolled] ?? rolled;
+      if (jumped === 36) {
+        setLog(`Rolled ${nextDice}. You reached square 36 and won.`);
+      } else if (jumped > rolled) {
+        setLog(`Rolled ${nextDice}. Ladder from ${rolled} to ${jumped}.`);
+      } else if (jumped < rolled) {
+        setLog(`Rolled ${nextDice}. Snake from ${rolled} to ${jumped}.`);
+      } else {
+        setLog(`Rolled ${nextDice}. Moved to ${rolled}.`);
+      }
+      return jumped;
+    });
+  }
+
+  return (
+    <section className="mini-game-panel game-3d ladders-stage">
+      <div className="game-hud">
+        <span>Dice: {dice}</span>
+        <span>{log}</span>
+      </div>
+      <div className="ladders-board" aria-label="Snakes and Ladders board">
+        {Array.from({ length: 36 }, (_, index) => {
+          const square = 36 - index;
+          const jump = jumps[square];
+          return (
+            <span key={square} className={position === square ? 'player-square' : ''}>
+              {square}
+              {jump && <small>{jump > square ? 'L' : 'S'}-&gt;{jump}</small>}
+            </span>
+          );
+        })}
+      </div>
+      <div className="game-controls">
+        <button type="button" onClick={rollDice}>Roll Dice</button>
+        <button type="button" onClick={() => { setPosition(1); setLog('Back to square 1.'); }}>Reset Board</button>
+      </div>
+    </section>
+  );
+}
+
+function MotoGtMiniGame() {
+  const [lane, setLane] = useState(1);
+  const [running, setRunning] = useState(false);
+  const [score, setScore] = useState(0);
+  const [obstacles, setObstacles] = useState([{ id: 1, lane: 0, x: 92 }]);
+  const [status, setStatus] = useState('Start the bike and dodge cones.');
+
+  function startRace() {
+    setLane(1);
+    setScore(0);
+    setObstacles([{ id: Date.now(), lane: 0, x: 92 }]);
+    setStatus('Moto GT running.');
+    setRunning(true);
+  }
+
+  useEffect(() => {
+    if (!running) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => {
+      setScore((value) => value + 1);
+      setObstacles((current) => {
+        const moved = current.map((item) => ({ ...item, x: item.x - 11 })).filter((item) => item.x > -8);
+        const crashed = moved.some((item) => item.lane === lane && item.x < 16 && item.x > 0);
+        if (crashed) {
+          setRunning(false);
+          setStatus('Crash. Hit Start Race to try again.');
+          return moved;
+        }
+        if (moved.length < 3 && Math.random() > 0.58) {
+          moved.push({ id: Date.now() + Math.random(), lane: Math.floor(Math.random() * 3), x: 96 });
+        }
+        return moved;
+      });
+    }, 300);
+    return () => window.clearInterval(timer);
+  }, [lane, running]);
+
+  return (
+    <section className="mini-game-panel game-3d race-stage">
+      <div className="game-hud">
+        <span>Moto GT Score: {score}</span>
+        <span>{status}</span>
+      </div>
+      <div className="road-game moto-game" aria-label="Moto GT racing track">
+        <span className="bike-player" style={{ top: `${20 + lane * 32}%` }}>M</span>
+        {obstacles.map((item) => (
+          <span key={item.id} className="road-obstacle cone" style={{ left: `${item.x}%`, top: `${22 + item.lane * 32}%` }} />
+        ))}
+      </div>
+      <div className="game-controls">
+        <button type="button" onClick={startRace}>Start Race</button>
+        <button type="button" onClick={() => setLane((value) => Math.max(0, value - 1))}>Lane Up</button>
+        <button type="button" onClick={() => setLane((value) => Math.min(2, value + 1))}>Lane Down</button>
+      </div>
+    </section>
+  );
+}
+
+function Speed2dMiniGame() {
+  const [lane, setLane] = useState(1);
+  const [running, setRunning] = useState(false);
+  const [boost, setBoost] = useState(false);
+  const [distance, setDistance] = useState(0);
+  const [traffic, setTraffic] = useState([{ id: 1, lane: 2, x: 88 }]);
+  const [status, setStatus] = useState('Dodge traffic and build distance.');
+
+  function startDrive() {
+    setLane(1);
+    setDistance(0);
+    setTraffic([{ id: Date.now(), lane: 2, x: 88 }]);
+    setStatus('Speed 2D rolling.');
+    setRunning(true);
+  }
+
+  useEffect(() => {
+    if (!running) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => {
+      const speed = boost ? 17 : 10;
+      setDistance((value) => value + speed);
+      setTraffic((current) => {
+        const moved = current.map((item) => ({ ...item, x: item.x - speed * 0.8 })).filter((item) => item.x > -8);
+        const crashed = moved.some((item) => item.lane === lane && item.x < 15 && item.x > 0);
+        if (crashed) {
+          setRunning(false);
+          setStatus('Traffic collision. Restart and send it again.');
+          return moved;
+        }
+        if (moved.length < 4 && Math.random() > 0.64) {
+          moved.push({ id: Date.now() + Math.random(), lane: Math.floor(Math.random() * 4), x: 96 });
+        }
+        return moved;
+      });
+    }, 280);
+    return () => window.clearInterval(timer);
+  }, [boost, lane, running]);
+
+  return (
+    <section className="mini-game-panel game-3d race-stage speed-stage">
+      <div className="game-hud">
+        <span>Distance: {distance}m</span>
+        <span>{status}</span>
+      </div>
+      <div className="road-game speed-game" aria-label="Speed 2D racing track">
+        <span className="car-player" style={{ top: `${13 + lane * 24}%` }}>NFS</span>
+        {traffic.map((item) => (
+          <span key={item.id} className="road-obstacle traffic" style={{ left: `${item.x}%`, top: `${15 + item.lane * 24}%` }} />
+        ))}
+      </div>
+      <div className="game-controls">
+        <button type="button" onClick={startDrive}>Start Drive</button>
+        <button type="button" onClick={() => setLane((value) => Math.max(0, value - 1))}>Left Lane</button>
+        <button type="button" onClick={() => setLane((value) => Math.min(3, value + 1))}>Right Lane</button>
+        <button type="button" onMouseDown={() => setBoost(true)} onMouseUp={() => setBoost(false)} onClick={() => setBoost((value) => !value)}>
+          Boost
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function PixelPongMiniGame() {
+  const [paddle, setPaddle] = useState(42);
+  const [ball, setBall] = useState({ x: 48, y: 45, vx: 5, vy: -5 });
+  const [running, setRunning] = useState(false);
+  const [score, setScore] = useState(0);
+  const [status, setStatus] = useState('Keep the ball above the paddle.');
+
+  function startPong() {
+    setPaddle(42);
+    setBall({ x: 48, y: 45, vx: 5, vy: -5 });
+    setScore(0);
+    setStatus('Pong running.');
+    setRunning(true);
+  }
+
+  useEffect(() => {
+    if (!running) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => {
+      setBall((current) => {
+        let next = { ...current, x: current.x + current.vx, y: current.y + current.vy };
+        if (next.x <= 0 || next.x >= 96) {
+          next = { ...next, vx: -next.vx };
+        }
+        if (next.y <= 0) {
+          next = { ...next, vy: Math.abs(next.vy) };
+        }
+        if (next.y >= 84 && next.x >= paddle && next.x <= paddle + 22) {
+          setScore((value) => value + 1);
+          next = { ...next, vy: -Math.abs(next.vy) };
+        }
+        if (next.y > 98) {
+          setRunning(false);
+          setStatus('Ball missed. Start Pong to replay.');
+          return current;
+        }
+        return next;
+      });
+    }, 150);
+    return () => window.clearInterval(timer);
+  }, [paddle, running]);
+
+  return (
+    <section className="mini-game-panel game-3d pong-stage">
+      <div className="game-hud">
+        <span>Pong Score: {score}</span>
+        <span>{status}</span>
+      </div>
+      <div className="pong-field" aria-label="Pixel Pong field">
+        <span className="pong-ball" style={{ left: `${ball.x}%`, top: `${ball.y}%` }} />
+        <span className="pong-paddle" style={{ left: `${paddle}%` }} />
+      </div>
+      <div className="game-controls">
+        <button type="button" onClick={startPong}>Start Pong</button>
+        <button type="button" onClick={() => setPaddle((value) => Math.max(0, value - 10))}>Move Left</button>
+        <button type="button" onClick={() => setPaddle((value) => Math.min(76, value + 10))}>Move Right</button>
+      </div>
+    </section>
+  );
+}
+
 function WallpaperApp({
   selected,
   onSelect,
@@ -1032,6 +1396,9 @@ const appAliases: Record<string, AppId> = {
   'about.exe': 'about',
   games: 'games',
   game: 'games',
+  arcade: 'arcade',
+  minigames: 'arcade',
+  mini: 'arcade',
   skills: 'skills',
   'skills.cpl': 'skills',
   models: 'models',
@@ -1112,7 +1479,7 @@ function TerminalApp({
         'DIR, DIR /GAMES, DIR /LOCAL_LLM, START <APP>, OPEN <APP>',
         'TYPE ABOUT.TXT, TYPE MISSION.TXT, WHOAMI, VER, DATE, TIME, ECHO <TEXT>',
         'POWER OFF, SHUTDOWN, CLS',
-        'Apps: ABOUT, GAMES, LLM, WALLPAPER, THEMES, SKILLS, MODELS, CONTACT, OPENGL, VULKAN, JARVIS, RAG, CODER, VOICE',
+        'Apps: ABOUT, GAMES, MINI, LLM, WALLPAPER, THEMES, SKILLS, MODELS, CONTACT, OPENGL, VULKAN, JARVIS, RAG, CODER, VOICE',
       );
       appendLines(output);
       return;
@@ -1120,7 +1487,7 @@ function TerminalApp({
 
     if (lowerCommand === 'dir' || lowerCommand === 'dir /apps') {
       output.push(
-        ...(['about', 'games', 'llm', 'wallpaper', 'themes', 'skills', 'models', 'contact', 'terminal'] as AppId[]).map(
+        ...(['about', 'games', 'arcade', 'llm', 'wallpaper', 'themes', 'skills', 'models', 'contact', 'terminal'] as AppId[]).map(
           (app) => `APP      ${appNames[app]}`,
         ),
       );
@@ -1265,6 +1632,7 @@ function StartMenu({
   const shortcuts: AppId[] = [
     'about',
     'games',
+    'arcade',
     'llm',
     'wallpaper',
     'themes',

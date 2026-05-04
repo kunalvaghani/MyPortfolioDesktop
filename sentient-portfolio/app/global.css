@@ -317,16 +317,19 @@ img {
 
 .desktop-grid {
   position: fixed;
-  top: 20px;
+  top: 18px;
   left: 18px;
   z-index: 2;
   display: grid;
-  grid-template-columns: 88px;
-  gap: 16px;
+  grid-template-columns: repeat(2, 88px);
+  gap: 14px 12px;
+  padding: 8px 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px dotted rgba(255, 255, 255, 0.28);
 }
 
 .desktop-icon {
-  min-height: 86px;
+  min-height: 82px;
   display: grid;
   justify-items: center;
   gap: 6px;
@@ -400,6 +403,25 @@ img {
   height: 3px;
   background: #bb1e1e;
   box-shadow: 4px -4px 0 #bb1e1e, 17px 0 0 #003ca4, 21px -4px 0 #00843d;
+}
+
+.pixel-icon.joystick::before {
+  left: 4px;
+  right: 4px;
+  bottom: 5px;
+  height: 18px;
+  background: #d9d9d9;
+  border: 3px solid #1c1c1c;
+  box-shadow: inset -4px -4px #8f8f8f;
+}
+
+.pixel-icon.joystick::after {
+  left: 18px;
+  top: 4px;
+  width: 6px;
+  height: 20px;
+  background: #1c1c1c;
+  box-shadow: -8px 20px 0 #bb1e1e, 10px 20px 0 #003ca4;
 }
 
 .pixel-icon.cube::before {
@@ -535,48 +557,53 @@ img {
 }
 
 .window-about {
-  left: 128px;
+  left: 238px;
   top: 54px;
 }
 
 .window-games {
-  left: 190px;
+  left: 304px;
   top: 88px;
 }
 
+.window-arcade {
+  left: 318px;
+  top: 98px;
+}
+
 .window-models {
-  left: 240px;
+  left: 342px;
   top: 116px;
 }
 
 .window-wallpaper {
-  left: 186px;
+  left: 284px;
   top: 112px;
 }
 
 .window-themes {
-  left: 252px;
+  left: 352px;
   top: 132px;
 }
 
 .window-llm {
-  left: 270px;
+  left: 374px;
   top: 82px;
 }
 
 .window-skills {
-  left: 310px;
+  left: 412px;
   top: 72px;
 }
 
 .window-contact {
-  left: 370px;
+  left: 460px;
   top: 134px;
   width: min(560px, calc(100vw - 160px));
 }
 
 .window-terminal {
-  left: 230px;
+  left: 326px;
   top: 172px;
   width: min(680px, calc(100vw - 150px));
 }
@@ -592,7 +619,7 @@ img {
 .window-ragDemo,
 .window-coderDemo,
 .window-voiceDemo {
-  left: 230px;
+  left: 326px;
   top: 86px;
 }
 
@@ -686,6 +713,7 @@ img {
 .about-app,
 .skills-app,
 .games-app,
+.mini-games-app,
 .llm-app,
 .llm-demo,
 .personalize-app,
@@ -865,6 +893,317 @@ h2 {
 
 .program-tile small {
   color: #333333;
+}
+
+.mini-games-app {
+  display: grid;
+  gap: 12px;
+  color: #f7f7ef;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 216, 77, 0.14), transparent 28%),
+    linear-gradient(135deg, #21163d, #0a0715 58%, #1b0d24);
+  padding: 10px;
+  border: 2px solid;
+  border-color: var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow);
+}
+
+.arcade-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  color: #fff7cf;
+  background:
+    linear-gradient(90deg, rgba(255, 216, 77, 0.14), transparent),
+    #17122d;
+  border: 2px solid;
+  border-color: var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow);
+  box-shadow: 0 8px 0 #07040f, 0 18px 28px rgba(0, 0, 0, 0.45);
+}
+
+.arcade-header h2,
+.arcade-header p {
+  margin-bottom: 4px;
+}
+
+.arcade-marquee {
+  padding: 8px 10px;
+  color: #101010;
+  background: repeating-linear-gradient(90deg, #ffd84d 0 10px, #ff9d1f 10px 20px);
+  border: 2px solid #ffffff;
+  box-shadow: 2px 2px #000000;
+  font-weight: 700;
+}
+
+.cartridge-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 7px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid #0a0715;
+}
+
+.cartridge-tabs button,
+.game-controls button {
+  min-height: 30px;
+  padding: 5px 9px;
+  color: #000000;
+  background: var(--win-face);
+  border: 2px solid;
+  border-color: var(--win-light) var(--win-shadow) var(--win-shadow) var(--win-light);
+  box-shadow: inset 1px 1px #dfdfdf, inset -1px -1px #808080;
+}
+
+.cartridge-tabs button.active,
+.game-controls button:active {
+  border-color: var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow);
+  box-shadow: inset 1px 1px #808080;
+}
+
+.mini-game-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.game-3d {
+  position: relative;
+  padding: 12px;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%),
+    linear-gradient(135deg, #2d2350, #0d0818);
+  border: 2px solid #050505;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08), 0 12px 0 #050505;
+  perspective: 820px;
+}
+
+.game-3d::before {
+  content: "";
+  position: absolute;
+  inset: auto -12% -38px;
+  height: 120px;
+  background:
+    linear-gradient(90deg, rgba(0, 225, 255, 0.16) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 34px 34px;
+  transform: rotateX(68deg);
+  transform-origin: bottom;
+  pointer-events: none;
+}
+
+.game-hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 7px 8px;
+  color: #56ff56;
+  background: #050505;
+  border: 2px solid;
+  border-color: var(--win-shadow) var(--win-light) var(--win-light) var(--win-shadow);
+  font-family: "Courier New", Consolas, monospace;
+  box-shadow: 0 5px 0 #000000;
+}
+
+.game-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.snake-board {
+  width: min(360px, 100%);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 2px;
+  padding: 10px;
+  background:
+    linear-gradient(135deg, #214421, #0e1f0e);
+  border: 5px solid #303030;
+  box-shadow: 0 16px 0 #060606, 0 24px 28px rgba(0, 0, 0, 0.55);
+  transform: rotateX(16deg) rotateZ(-1deg);
+  transform-origin: center bottom;
+}
+
+.snake-board span {
+  min-width: 0;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, #1b461b, #102710);
+  border: 1px solid #2d6b2d;
+  box-shadow: inset 1px 1px rgba(255, 255, 255, 0.14);
+}
+
+.snake-board .snake-cell {
+  background: linear-gradient(135deg, #b8ff6a, #19a94c);
+  box-shadow: inset 2px 2px rgba(255, 255, 255, 0.36), 2px 2px #052205;
+}
+
+.snake-board .food-cell {
+  background: radial-gradient(circle at 30% 30%, #fff0f0, #ff3b3b 42%, #8d1111);
+  border-radius: 50%;
+  box-shadow: 0 3px 0 #4d0505;
+}
+
+.ladders-board {
+  width: min(420px, 100%);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  border: 5px solid #303030;
+  box-shadow: 0 16px 0 #060606, 0 24px 28px rgba(0, 0, 0, 0.55);
+  transform: rotateX(14deg) rotateZ(1deg);
+  transform-origin: center bottom;
+}
+
+.ladders-board span {
+  min-height: 48px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  background: linear-gradient(135deg, #fffbe8, #d3c89d);
+  border: 1px solid #808080;
+  font-weight: 700;
+  box-shadow: inset 2px 2px rgba(255, 255, 255, 0.5), inset -2px -2px rgba(0, 0, 0, 0.1);
+}
+
+.ladders-board small {
+  color: #333399;
+  font-size: 0.7rem;
+}
+
+.ladders-board .player-square {
+  color: #ffffff;
+  background: linear-gradient(135deg, #4e7fff, #000080);
+  text-shadow: 1px 1px #000000;
+}
+
+.road-game {
+  position: relative;
+  height: 230px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, #202020 0 9%, transparent 9% 91%, #202020 91%),
+    repeating-linear-gradient(90deg, transparent 0 30px, rgba(255, 255, 255, 0.72) 30px 46px, transparent 46px 80px),
+    linear-gradient(180deg, #111111, #4f4f4f 55%, #151515);
+  border: 5px solid #202020;
+  clip-path: polygon(9% 0, 91% 0, 100% 100%, 0 100%);
+  box-shadow: 0 16px 0 #060606, 0 24px 28px rgba(0, 0, 0, 0.55);
+  transform: rotateX(12deg);
+  transform-origin: center bottom;
+}
+
+.road-game::before,
+.road-game::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 24px 0 rgba(255, 255, 255, 0.18);
+}
+
+.road-game::before {
+  top: 34%;
+}
+
+.road-game::after {
+  top: 66%;
+}
+
+.bike-player,
+.car-player,
+.road-obstacle {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 3px 5px #000000, inset 2px 2px rgba(255, 255, 255, 0.28);
+  transform: translateY(-50%) skewX(-8deg);
+}
+
+.bike-player {
+  left: 8%;
+  width: 42px;
+  height: 24px;
+  background: #d92323;
+  border-radius: 6px 14px 14px 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.car-player {
+  left: 8%;
+  width: 52px;
+  height: 28px;
+  background: #2046c7;
+  border-radius: 4px 12px 12px 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.road-obstacle {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #ffe08a, #ff7a1f);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.road-obstacle.traffic {
+  width: 42px;
+  height: 26px;
+  background: linear-gradient(135deg, #19d978, #007a39);
+  clip-path: none;
+  border-radius: 4px 12px 12px 4px;
+}
+
+.speed-game::before {
+  top: 25%;
+}
+
+.speed-game::after {
+  top: 75%;
+}
+
+.pong-field {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, transparent 49%, rgba(86, 255, 86, 0.18) 49% 51%, transparent 51%),
+    radial-gradient(circle at 50% 50%, rgba(86, 255, 86, 0.16), transparent 45%),
+    #050505;
+  border: 5px solid #202020;
+  box-shadow: 0 16px 0 #060606, 0 24px 28px rgba(0, 0, 0, 0.55);
+  transform: rotateX(10deg);
+  transform-origin: center bottom;
+}
+
+.pong-ball,
+.pong-paddle {
+  position: absolute;
+  display: block;
+  background: linear-gradient(135deg, #d7ffd7, #56ff56 48%, #169916);
+  box-shadow: 4px 5px #000000, inset 2px 2px rgba(255, 255, 255, 0.55);
+}
+
+.pong-ball {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pong-paddle {
+  bottom: 16px;
+  width: 24%;
+  height: 14px;
+  border-radius: 8px;
 }
 
 .project-detail {
@@ -1451,6 +1790,7 @@ h2 {
   .retro-window,
   .window-about,
   .window-games,
+  .window-arcade,
   .window-models,
   .window-wallpaper,
   .window-themes,
@@ -1483,6 +1823,7 @@ h2 {
 
   .llm-demo-header,
   .llm-input-row,
+  .arcade-header,
   .personalize-header {
     grid-template-columns: 1fr;
   }
@@ -1515,6 +1856,7 @@ h2 {
 
   .folder-grid,
   .choice-grid,
+  .cartridge-tabs,
   .models-app,
   .skill-grid {
     grid-template-columns: 1fr;
