@@ -7,6 +7,9 @@ type AppId =
   | 'games'
   | 'skills'
   | 'models'
+  | 'llm'
+  | 'wallpaper'
+  | 'themes'
   | 'contact'
   | 'terminal'
   | 'opengl'
@@ -15,7 +18,11 @@ type AppId =
   | 'kitchen'
   | 'ai'
   | 'runner'
-  | 'maze';
+  | 'maze'
+  | 'jarvisDemo'
+  | 'ragDemo'
+  | 'coderDemo'
+  | 'voiceDemo';
 
 type Project = {
   id: AppId;
@@ -34,6 +41,42 @@ type ModelAsset = {
   title: string;
   summary: string;
   image: string;
+};
+
+type LocalLlmProject = {
+  id: AppId;
+  title: string;
+  role: string;
+  summary: string;
+  stack: string[];
+  promptIdeas: string[];
+  bootLog: string[];
+};
+
+type WallpaperId =
+  | 'teal'
+  | 'clouds'
+  | 'stars'
+  | 'circuit'
+  | 'sunset'
+  | 'meadow'
+  | 'ocean'
+  | 'lava'
+  | 'graphite'
+  | 'arcade';
+
+type WallpaperOption = {
+  id: WallpaperId;
+  title: string;
+  summary: string;
+};
+
+type ThemeId = 'classic' | 'midnight' | 'orchard';
+
+type ThemeOption = {
+  id: ThemeId;
+  title: string;
+  summary: string;
 };
 
 const assetBase = 'https://raw.githubusercontent.com/kunalvaghani/My-Portfolio/main/assets';
@@ -144,6 +187,68 @@ const modelAssets: ModelAsset[] = [
   },
 ];
 
+const localLlmProjects: LocalLlmProject[] = [
+  {
+    id: 'jarvisDemo',
+    title: 'Jarvis Local-First Assistant',
+    role: 'Private Desktop Agent Demo',
+    summary:
+      'A Windows-first local assistant concept with permissioned tools, memory, app control, and an Ollama-style model backend.',
+    stack: ['Ollama', 'FastAPI', 'Electron', 'SQLite', 'Tools'],
+    promptIdeas: ['Plan my day like a local assistant', 'Summarize what this app can do'],
+    bootLog: ['Loading memory index...', 'Checking tool permissions...', 'Private mode enabled.'],
+  },
+  {
+    id: 'ragDemo',
+    title: 'Local LLM Life OS / Grounded RAG',
+    role: 'RAG and Citation Demo',
+    summary:
+      'A local-first knowledge system for ingesting notes/files, chunking them, retrieving evidence, and answering with citations.',
+    stack: ['RAG', 'Embeddings', 'SQLite', 'Citations', 'PDF/Text'],
+    promptIdeas: ['Explain grounded answers', 'Show how citations work'],
+    bootLog: ['Index mounted...', 'Retriever warmed...', 'Evidence drawer ready.'],
+  },
+  {
+    id: 'coderDemo',
+    title: 'Stage 3 Local Coding Agent',
+    role: 'Planning / Coding Agent Demo',
+    summary:
+      'A coding-agent workflow that turns vague goals into plans, researches files, edits code, runs tests, and reports changes.',
+    stack: ['FastAPI', 'React', 'Ollama', 'Pytest', 'Approvals'],
+    promptIdeas: ['Fix a bug in a project', 'Create a testing plan'],
+    bootLog: ['Workspace guard active...', 'Planner online...', 'Test runner attached.'],
+  },
+  {
+    id: 'voiceDemo',
+    title: 'Talking AI Voice Assistant',
+    role: 'Voice / Memory Assistant Demo',
+    summary:
+      'A local voice-assistant starter with speech-to-text, text-to-speech, VAD capture, memory, diagnostics, and local model calls.',
+    stack: ['STT', 'TTS', 'VAD', 'Ollama', 'Memory'],
+    promptIdeas: ['Pretend I spoke a reminder', 'Diagnose my microphone flow'],
+    bootLog: ['Audio device simulated...', 'Memory DB ready...', 'Voice pipeline armed.'],
+  },
+];
+
+const wallpaperOptions: WallpaperOption[] = [
+  { id: 'teal', title: 'KunalOS Teal Grid', summary: 'Classic early Windows desktop texture.' },
+  { id: 'clouds', title: 'Clouds 95', summary: 'Bright sky wallpaper with soft system blue.' },
+  { id: 'stars', title: 'Starfield Boot', summary: 'Dark space pattern for late-night browsing.' },
+  { id: 'circuit', title: 'Circuit Lab', summary: 'Retro hardware lines for engine work.' },
+  { id: 'sunset', title: 'Sunset CRT', summary: 'Warm bands with old monitor scan texture.' },
+  { id: 'meadow', title: 'Green Meadow', summary: 'Game-world field tones with pixel dots.' },
+  { id: 'ocean', title: 'Deep Ocean', summary: 'Blue waves and subtle grid movement.' },
+  { id: 'lava', title: 'Lava Debug', summary: 'Arcade red/orange diagnostic energy.' },
+  { id: 'graphite', title: 'Graphite CAD', summary: 'Clean gray blueprint background.' },
+  { id: 'arcade', title: 'Arcade Floor', summary: 'Playful checkerboard neon floor.' },
+];
+
+const themeOptions: ThemeOption[] = [
+  { id: 'classic', title: 'Classic Gray', summary: 'Windows 95 inspired gray chrome and blue titlebars.' },
+  { id: 'midnight', title: 'Midnight Workbench', summary: 'Dark graphite shell with cyan highlights.' },
+  { id: 'orchard', title: 'Orchard Lab', summary: 'Soft green panels with deep purple titlebars.' },
+];
+
 function fallbackArt(title: string, accent = '#2046c7') {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
@@ -167,6 +272,9 @@ const appNames: Record<AppId, string> = {
   games: 'Games',
   skills: 'Skills.cpl',
   models: 'Models',
+  llm: 'Local LLM Apps',
+  wallpaper: 'Wallpaper.cpl',
+  themes: 'Themes.cpl',
   contact: 'Contact',
   terminal: 'Command.com',
   opengl: 'OpenGL Engine',
@@ -176,6 +284,10 @@ const appNames: Record<AppId, string> = {
   ai: 'Game AI',
   runner: 'Commando Runner',
   maze: 'Slide Maze',
+  jarvisDemo: 'Jarvis Demo',
+  ragDemo: 'RAG Demo',
+  coderDemo: 'Coding Agent',
+  voiceDemo: 'Voice AI Demo',
 };
 
 const bootLines = [
@@ -209,14 +321,20 @@ const skills = [
 
 export default function Page() {
   const [booted, setBooted] = useState(false);
+  const [poweredOff, setPoweredOff] = useState(false);
   const [openApps, setOpenApps] = useState<AppId[]>(['about']);
   const [activeApp, setActiveApp] = useState<AppId>('about');
   const [startOpen, setStartOpen] = useState(false);
+  const [wallpaper, setWallpaper] = useState<WallpaperId>('teal');
+  const [theme, setTheme] = useState<ThemeId>('classic');
 
   useEffect(() => {
+    if (poweredOff) {
+      return undefined;
+    }
     const timer = window.setTimeout(() => setBooted(true), 4700);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [poweredOff]);
 
   const time = useMemo(
     () =>
@@ -243,16 +361,39 @@ export default function Page() {
     });
   }
 
+  function powerOff() {
+    setPoweredOff(true);
+    setBooted(false);
+    setOpenApps(['about']);
+    setActiveApp('about');
+    setStartOpen(false);
+  }
+
+  function powerOn() {
+    setPoweredOff(false);
+    setBooted(false);
+  }
+
+  if (poweredOff) {
+    return <PowerOffScreen onPowerOn={powerOn} />;
+  }
+
   if (!booted) {
     return <BootScreen onSkip={() => setBooted(true)} />;
   }
 
   return (
-    <main className="desktop-shell" aria-label="KunalOS portfolio desktop">
+    <main
+      className={`desktop-shell theme-${theme} wallpaper-${wallpaper}`}
+      aria-label="KunalOS portfolio desktop"
+    >
       <div className="desktop-grid" aria-label="Desktop shortcuts">
         <DesktopIcon label="My Portfolio" glyph="pc" onOpen={() => openApp('about')} />
         <DesktopIcon label="Games" glyph="game" onOpen={() => openApp('games')} />
         <DesktopIcon label="3D Models" glyph="cube" onOpen={() => openApp('models')} />
+        <DesktopIcon label="Local LLM" glyph="brain" onOpen={() => openApp('llm')} />
+        <DesktopIcon label="Wallpapers" glyph="paint" onOpen={() => openApp('wallpaper')} />
+        <DesktopIcon label="Themes" glyph="gear" onOpen={() => openApp('themes')} />
         <DesktopIcon label="Skills" glyph="tools" onOpen={() => openApp('skills')} />
         <DesktopIcon label="Contact" glyph="mail" onOpen={() => openApp('contact')} />
         <DesktopIcon label="Command" glyph="term" onOpen={() => openApp('terminal')} />
@@ -269,12 +410,20 @@ export default function Page() {
             onFocus={() => setActiveApp(app)}
             onClose={() => closeApp(app)}
           >
-            <AppContent app={app} openApp={openApp} />
+            <AppContent
+              app={app}
+              openApp={openApp}
+              onPowerOff={powerOff}
+              wallpaper={wallpaper}
+              setWallpaper={setWallpaper}
+              theme={theme}
+              setTheme={setTheme}
+            />
           </RetroWindow>
         ))}
       </div>
 
-      {startOpen && <StartMenu openApp={openApp} />}
+      {startOpen && <StartMenu openApp={openApp} onPowerOff={powerOff} />}
 
       <footer className="taskbar" aria-label="Taskbar">
         <button
@@ -364,13 +513,28 @@ function BootScreen({ onSkip }: { onSkip: () => void }) {
   );
 }
 
+function PowerOffScreen({ onPowerOn }: { onPowerOn: () => void }) {
+  return (
+    <main className="power-screen">
+      <section className="power-panel" aria-label="KunalOS powered off">
+        <div className="power-logo" aria-hidden="true" />
+        <h1>It is now safe to turn off KunalOS.</h1>
+        <p>Portfolio session closed. Press power to boot the desktop again.</p>
+        <button className="power-button" type="button" onClick={onPowerOn}>
+          Power On
+        </button>
+      </section>
+    </main>
+  );
+}
+
 function DesktopIcon({
   label,
   glyph,
   onOpen,
 }: {
   label: string;
-  glyph: 'pc' | 'game' | 'cube' | 'tools' | 'mail' | 'term';
+  glyph: 'pc' | 'game' | 'cube' | 'brain' | 'paint' | 'gear' | 'tools' | 'mail' | 'term';
   onOpen: () => void;
 }) {
   return (
@@ -429,10 +593,31 @@ function RetroWindow({
   );
 }
 
-function AppContent({ app, openApp }: { app: AppId; openApp: (app: AppId) => void }) {
+function AppContent({
+  app,
+  openApp,
+  onPowerOff,
+  wallpaper,
+  setWallpaper,
+  theme,
+  setTheme,
+}: {
+  app: AppId;
+  openApp: (app: AppId) => void;
+  onPowerOff: () => void;
+  wallpaper: WallpaperId;
+  setWallpaper: (wallpaper: WallpaperId) => void;
+  theme: ThemeId;
+  setTheme: (theme: ThemeId) => void;
+}) {
   const project = projects.find((item) => item.id === app);
   if (project) {
     return <ProjectDetail project={project} />;
+  }
+
+  const llmProject = localLlmProjects.find((item) => item.id === app);
+  if (llmProject) {
+    return <LocalLlmDemoApp project={llmProject} />;
   }
 
   switch (app) {
@@ -444,10 +629,16 @@ function AppContent({ app, openApp }: { app: AppId; openApp: (app: AppId) => voi
       return <SkillsApp />;
     case 'models':
       return <ModelsApp />;
+    case 'llm':
+      return <LocalLlmHub openApp={openApp} />;
+    case 'wallpaper':
+      return <WallpaperApp selected={wallpaper} onSelect={setWallpaper} />;
+    case 'themes':
+      return <ThemeApp selected={theme} onSelect={setTheme} />;
     case 'contact':
       return <ContactApp />;
     case 'terminal':
-      return <TerminalApp />;
+      return <TerminalApp openApp={openApp} onPowerOff={onPowerOff} />;
     default:
       return null;
   }
@@ -486,12 +677,136 @@ function AboutApp({ openApp }: { openApp: (app: AppId) => void }) {
         <button className="retro-action" type="button" onClick={() => openApp('skills')}>
           View Skills
         </button>
+        <button className="retro-action" type="button" onClick={() => openApp('llm')}>
+          Try LLM Apps
+        </button>
         <button className="retro-action" type="button" onClick={() => openApp('contact')}>
           Contact
         </button>
       </div>
     </div>
   );
+}
+
+function LocalLlmHub({ openApp }: { openApp: (app: AppId) => void }) {
+  return (
+    <div className="llm-app">
+      <div className="toolbar">
+        <button type="button">File</button>
+        <button type="button">Demos</button>
+        <button type="button">Safety</button>
+      </div>
+      <div className="meter-panel">
+        <h2>Local LLM Apps, Browser Mode</h2>
+        <p>
+          These are interactive portfolio demos of my local-first LLM projects. They run entirely
+          inside this Windows-style website, so visitors can click, type, and explore without
+          downloading Ollama, Python, models, or desktop apps.
+        </p>
+      </div>
+      <div className="folder-grid">
+        {localLlmProjects.map((project) => (
+          <button
+            key={project.id}
+            className="program-tile llm-tile"
+            type="button"
+            onClick={() => openApp(project.id)}
+            title={`Open ${project.title}`}
+          >
+            <SafeImage src={fallbackArt(project.title, '#004e8a')} alt="" fallbackTitle={project.title} />
+            <span>{project.title}</span>
+            <small>{project.role}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LocalLlmDemoApp({ project }: { project: LocalLlmProject }) {
+  const [prompt, setPrompt] = useState(project.promptIdeas[0]);
+  const [messages, setMessages] = useState([
+    `KunalOS loaded ${project.title}.`,
+    ...project.bootLog,
+    'Type a prompt or click a sample command.',
+  ]);
+
+  function runPrompt(nextPrompt = prompt) {
+    const cleanPrompt = nextPrompt.trim() || project.promptIdeas[0];
+    const reply = makeDemoReply(project, cleanPrompt);
+    setPrompt(cleanPrompt);
+    setMessages((current) => [
+      ...current,
+      `Visitor> ${cleanPrompt}`,
+      `${project.title}> ${reply}`,
+    ]);
+  }
+
+  return (
+    <div className="llm-demo">
+      <div className="llm-demo-header">
+        <div>
+          <p className="eyebrow">C:\LOCAL_LLM\{project.id.toUpperCase()}.EXE</p>
+          <h2>{project.title}</h2>
+          <p>{project.summary}</p>
+        </div>
+        <div className="local-badge">No download</div>
+      </div>
+
+      <div className="stack-list" aria-label={`${project.title} stack`}>
+        {project.stack.map((tag) => (
+          <span key={tag}>{tag}</span>
+        ))}
+      </div>
+
+      <div className="sample-prompts">
+        {project.promptIdeas.map((idea) => (
+          <button
+            className="retro-action"
+            type="button"
+            key={idea}
+            onClick={() => runPrompt(idea)}
+          >
+            {idea}
+          </button>
+        ))}
+      </div>
+
+      <div className="llm-console" aria-label={`${project.title} browser demo transcript`}>
+        {messages.map((message, index) => (
+          <p key={`${message}-${index}`}>{message}</p>
+        ))}
+      </div>
+
+      <div className="llm-input-row">
+        <input
+          value={prompt}
+          onChange={(event) => setPrompt(event.target.value)}
+          aria-label={`${project.title} prompt`}
+        />
+        <button className="retro-action" type="button" onClick={() => runPrompt()}>
+          Ask Demo
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function makeDemoReply(project: LocalLlmProject, prompt: string) {
+  const lowerPrompt = prompt.toLowerCase();
+  if (lowerPrompt.includes('bug') || lowerPrompt.includes('test') || lowerPrompt.includes('code')) {
+    return 'I would inspect the workspace, make a scoped patch, run tests, and summarize changed files. In this website demo, I show the workflow without touching a visitor machine.';
+  }
+  if (lowerPrompt.includes('citation') || lowerPrompt.includes('ground') || lowerPrompt.includes('rag')) {
+    return 'I would retrieve matching notes, attach evidence snippets, and answer only from grounded context. Demo citation: [local-note-03].';
+  }
+  if (lowerPrompt.includes('voice') || lowerPrompt.includes('microphone') || lowerPrompt.includes('spoke')) {
+    return 'I would capture speech locally, transcribe it, store memory in SQLite, then speak back with local TTS. Browser demo keeps it text-only for zero setup.';
+  }
+  if (lowerPrompt.includes('day') || lowerPrompt.includes('assistant') || lowerPrompt.includes('plan')) {
+    return 'I would create a private plan, ask for permission before risky actions, and keep local memory separate from cloud services.';
+  }
+  return `This demo represents ${project.role.toLowerCase()}: local-first design, permissioned workflows, and a no-download browser preview for portfolio visitors.`;
 }
 
 function GamesApp({ openApp }: { openApp: (app: AppId) => void }) {
@@ -612,26 +927,352 @@ function ContactApp() {
   );
 }
 
-function TerminalApp() {
+function WallpaperApp({
+  selected,
+  onSelect,
+}: {
+  selected: WallpaperId;
+  onSelect: (wallpaper: WallpaperId) => void;
+}) {
+  const current = wallpaperOptions.find((option) => option.id === selected) ?? wallpaperOptions[0];
+
   return (
-    <div className="terminal-app">
-      <p>Microsoft(R) KunalOS</p>
-      <p>C:\PORTFOLIO&gt; dir /games</p>
-      {projects.map((project) => (
-        <p key={project.id}>GAME&nbsp;&nbsp;&nbsp;&nbsp;{project.title}</p>
-      ))}
-      <p>C:\PORTFOLIO&gt; type mission.txt</p>
-      <p>
-        Build fast, playful, technically grounded experiences across engines, tools, graphics, and
-        AI.
-      </p>
-      <p className="cursor-line">C:\PORTFOLIO&gt; _</p>
+    <div className="personalize-app">
+      <div className="toolbar">
+        <button type="button">Pattern</button>
+        <button type="button">Preview</button>
+        <button type="button">Apply</button>
+      </div>
+      <div className="personalize-header">
+        <div>
+          <p className="eyebrow">C:\WINDOWS\WALLPAPER.CPL</p>
+          <h2>Desktop Wallpaper</h2>
+          <p>{current.title} is active.</p>
+        </div>
+        <span className={`monitor-preview wallpaper-preview-${selected}`} aria-hidden="true" />
+      </div>
+      <div className="choice-grid" aria-label="Wallpaper choices">
+        {wallpaperOptions.map((option) => (
+          <button
+            key={option.id}
+            className={`choice-tile ${selected === option.id ? 'selected' : ''}`}
+            type="button"
+            onClick={() => onSelect(option.id)}
+            aria-pressed={selected === option.id}
+          >
+            <span className={`wallpaper-preview wallpaper-preview-${option.id}`} aria-hidden="true" />
+            <strong>{option.title}</strong>
+            <small>{option.summary}</small>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
-function StartMenu({ openApp }: { openApp: (app: AppId) => void }) {
-  const shortcuts: AppId[] = ['about', 'games', 'skills', 'models', 'contact', 'terminal'];
+function ThemeApp({
+  selected,
+  onSelect,
+}: {
+  selected: ThemeId;
+  onSelect: (theme: ThemeId) => void;
+}) {
+  const current = themeOptions.find((option) => option.id === selected) ?? themeOptions[0];
+
+  return (
+    <div className="personalize-app">
+      <div className="toolbar">
+        <button type="button">Scheme</button>
+        <button type="button">Colors</button>
+        <button type="button">Save As</button>
+      </div>
+      <div className="personalize-header">
+        <div>
+          <p className="eyebrow">C:\WINDOWS\THEMES.CPL</p>
+          <h2>Theme Settings</h2>
+          <p>{current.title} controls window chrome, titlebars, panels, and highlights.</p>
+        </div>
+        <span className={`theme-preview theme-preview-${selected}`} aria-hidden="true">
+          <i />
+        </span>
+      </div>
+      <div className="choice-grid theme-grid" aria-label="Theme choices">
+        {themeOptions.map((option) => (
+          <button
+            key={option.id}
+            className={`choice-tile theme-choice ${selected === option.id ? 'selected' : ''}`}
+            type="button"
+            onClick={() => onSelect(option.id)}
+            aria-pressed={selected === option.id}
+          >
+            <span className={`theme-preview theme-preview-${option.id}`} aria-hidden="true">
+              <i />
+            </span>
+            <strong>{option.title}</strong>
+            <small>{option.summary}</small>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type TerminalLine = {
+  id: number;
+  text: string;
+};
+
+const terminalIntro = [
+  'Microsoft(R) KunalOS',
+  'Portfolio Shell v1.0 - type HELP for commands.',
+];
+
+const appAliases: Record<string, AppId> = {
+  about: 'about',
+  'about.exe': 'about',
+  games: 'games',
+  game: 'games',
+  skills: 'skills',
+  'skills.cpl': 'skills',
+  models: 'models',
+  llm: 'llm',
+  local_llm: 'llm',
+  local: 'llm',
+  wallpaper: 'wallpaper',
+  wallpapers: 'wallpaper',
+  wallpapercpl: 'wallpaper',
+  theme: 'themes',
+  themes: 'themes',
+  themescpl: 'themes',
+  contact: 'contact',
+  command: 'terminal',
+  terminal: 'terminal',
+  cmd: 'terminal',
+  opengl: 'opengl',
+  vulkan: 'vulkan',
+  village: 'village',
+  kitchen: 'kitchen',
+  ai: 'ai',
+  runner: 'runner',
+  maze: 'maze',
+  jarvis: 'jarvisDemo',
+  jarvisdemo: 'jarvisDemo',
+  rag: 'ragDemo',
+  ragdemo: 'ragDemo',
+  coder: 'coderDemo',
+  coderdemo: 'coderDemo',
+  voice: 'voiceDemo',
+  voicedemo: 'voiceDemo',
+};
+
+function makeTerminalLines(lines: string[], offset = 0): TerminalLine[] {
+  return lines.map((text, index) => ({ id: offset + index, text }));
+}
+
+function TerminalApp({
+  openApp,
+  onPowerOff,
+}: {
+  openApp: (app: AppId) => void;
+  onPowerOff: () => void;
+}) {
+  const [command, setCommand] = useState('');
+  const [history, setHistory] = useState<TerminalLine[]>(makeTerminalLines(terminalIntro));
+  const [lineCounter, setLineCounter] = useState(terminalIntro.length);
+
+  function appendLines(lines: string[]) {
+    setHistory((current) => [...current, ...makeTerminalLines(lines, lineCounter)]);
+    setLineCounter((count) => count + lines.length);
+  }
+
+  function resetHistory() {
+    setHistory(makeTerminalLines(terminalIntro));
+    setLineCounter(terminalIntro.length);
+  }
+
+  function runCommand(rawCommand: string) {
+    const cleanCommand = rawCommand.trim();
+    const lowerCommand = cleanCommand.toLowerCase();
+    const parts = lowerCommand.split(/\s+/).filter(Boolean);
+    const output: string[] = [`C:\\PORTFOLIO> ${cleanCommand || ''}`];
+
+    if (!cleanCommand) {
+      appendLines(output);
+      return;
+    }
+
+    if (lowerCommand === 'cls' || lowerCommand === 'clear') {
+      resetHistory();
+      return;
+    }
+
+    if (lowerCommand === 'help' || lowerCommand === '?') {
+      output.push(
+        'Available commands:',
+        'DIR, DIR /GAMES, DIR /LOCAL_LLM, START <APP>, OPEN <APP>',
+        'TYPE ABOUT.TXT, TYPE MISSION.TXT, WHOAMI, VER, DATE, TIME, ECHO <TEXT>',
+        'POWER OFF, SHUTDOWN, CLS',
+        'Apps: ABOUT, GAMES, LLM, WALLPAPER, THEMES, SKILLS, MODELS, CONTACT, OPENGL, VULKAN, JARVIS, RAG, CODER, VOICE',
+      );
+      appendLines(output);
+      return;
+    }
+
+    if (lowerCommand === 'dir' || lowerCommand === 'dir /apps') {
+      output.push(
+        ...(['about', 'games', 'llm', 'wallpaper', 'themes', 'skills', 'models', 'contact', 'terminal'] as AppId[]).map(
+          (app) => `APP      ${appNames[app]}`,
+        ),
+      );
+      appendLines(output);
+      return;
+    }
+
+    if (lowerCommand === 'dir /games' || lowerCommand === 'dir games') {
+      output.push(...projects.map((project) => `GAME     ${project.title}`));
+      appendLines(output);
+      return;
+    }
+
+    if (
+      lowerCommand === 'dir /local_llm' ||
+      lowerCommand === 'dir local_llm' ||
+      lowerCommand === 'dir /llm' ||
+      lowerCommand === 'dir llm'
+    ) {
+      output.push(...localLlmProjects.map((project) => `LLM      ${project.title}`));
+      appendLines(output);
+      return;
+    }
+
+    if (lowerCommand === 'type mission.txt') {
+      output.push(
+        'Build fast, playful, technically grounded experiences across engines, tools, graphics, and AI.',
+      );
+      appendLines(output);
+      return;
+    }
+
+    if (lowerCommand === 'type about.txt') {
+      output.push(
+        'Kunal Vaghani - Game Developer and Engine Programmer.',
+        'Focus: gameplay systems, rendering, custom engines, local AI apps, and useful tools.',
+      );
+      appendLines(output);
+      return;
+    }
+
+    if (lowerCommand === 'whoami') {
+      output.push('portfolio\\visitor');
+      appendLines(output);
+      return;
+    }
+
+    if (lowerCommand === 'ver') {
+      output.push('KunalOS Portfolio Shell v1.0');
+      appendLines(output);
+      return;
+    }
+
+    if (lowerCommand === 'date') {
+      output.push(new Intl.DateTimeFormat('en-US', { dateStyle: 'full' }).format(new Date()));
+      appendLines(output);
+      return;
+    }
+
+    if (lowerCommand === 'time') {
+      output.push(new Intl.DateTimeFormat('en-US', { timeStyle: 'medium' }).format(new Date()));
+      appendLines(output);
+      return;
+    }
+
+    if (parts[0] === 'echo') {
+      output.push(cleanCommand.slice(5));
+      appendLines(output);
+      return;
+    }
+
+    if (parts[0] === 'start' || parts[0] === 'open') {
+      const target = parts.slice(1).join('').replace(/[.\-_\s]/g, '');
+      const app = appAliases[target] ?? appAliases[parts[1]];
+      if (app) {
+        output.push(`Opening ${appNames[app]}...`);
+        appendLines(output);
+        openApp(app);
+        return;
+      }
+      output.push(`Cannot find app: ${parts.slice(1).join(' ') || '(missing)'}`);
+      appendLines(output);
+      return;
+    }
+
+    if (
+      lowerCommand === 'power off' ||
+      lowerCommand === 'poweroff' ||
+      lowerCommand === 'shutdown' ||
+      lowerCommand === 'exit'
+    ) {
+      output.push('Shutting down KunalOS...');
+      appendLines(output);
+      window.setTimeout(onPowerOff, 500);
+      return;
+    }
+
+    output.push(`Bad command or file name: ${cleanCommand}`);
+    appendLines(output);
+  }
+
+  function submitCommand(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    runCommand(command);
+    setCommand('');
+  }
+
+  return (
+    <div className="terminal-app">
+      <div className="terminal-lines" aria-label="Command prompt output">
+        {history.map((line) => (
+          <p key={line.id}>{line.text}</p>
+        ))}
+      </div>
+      <form className="terminal-input-form" onSubmit={submitCommand}>
+        <label className="terminal-prompt" htmlFor="terminal-command">
+          C:\PORTFOLIO&gt;
+        </label>
+        <input
+          id="terminal-command"
+          value={command}
+          onChange={(event) => setCommand(event.target.value)}
+          aria-label="Command prompt input"
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <button className="terminal-submit" type="submit">
+          Run
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function StartMenu({
+  openApp,
+  onPowerOff,
+}: {
+  openApp: (app: AppId) => void;
+  onPowerOff: () => void;
+}) {
+  const shortcuts: AppId[] = [
+    'about',
+    'games',
+    'llm',
+    'wallpaper',
+    'themes',
+    'skills',
+    'models',
+    'contact',
+    'terminal',
+  ];
 
   return (
     <aside className="start-menu" aria-label="Start menu">
@@ -648,6 +1289,10 @@ function StartMenu({ openApp }: { openApp: (app: AppId) => void }) {
           <span className="menu-icon" aria-hidden="true" />
           GitHub Repo
         </a>
+        <button className="power-off-button" type="button" onClick={onPowerOff}>
+          <span className="menu-icon" aria-hidden="true" />
+          Power Off
+        </button>
       </div>
     </aside>
   );

@@ -174,6 +174,47 @@ async function assertClick(client, selector, text, exact = true) {
   await delay(180);
 }
 
+async function fillByLabel(client, labelText, value) {
+  const filled = await evaluate(
+    client,
+    pageScript(`
+      const label = ${JSON.stringify(labelText)};
+      const value = ${JSON.stringify(value)};
+      const input = [...document.querySelectorAll('input[aria-label]')]
+        .find((node) => node.getAttribute('aria-label') === label);
+      if (!input) return false;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      return true;
+    `),
+  );
+  if (!filled) {
+    fail(`Could not fill input: ${labelText}`);
+  }
+  await delay(100);
+}
+
+async function submitTerminalCommand(client, command) {
+  const submitted = await evaluate(
+    client,
+    pageScript(`
+      const input = document.querySelector('input[aria-label="Command prompt input"]');
+      if (!input) return false;
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+      setter.call(input, ${JSON.stringify(command)});
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      const form = input.closest('form');
+      if (!form) return false;
+      form.requestSubmit();
+      return true;
+    `),
+  );
+  if (!submitted) {
+    fail(`Could not submit terminal command: ${command}`);
+  }
+  await delay(250);
+}
+
 async function main() {
   await mkdir(userDataDir, { recursive: true });
 
@@ -215,13 +256,65 @@ async function main() {
     await assertText(client, 'Kunal Vaghani');
     await assertText(client, 'Game Developer and Engine Programmer');
 
-    const desktopIcons = ['My Portfolio', 'Games', '3D Models', 'Skills', 'Contact', 'Command'];
+    const desktopIcons = [
+      'My Portfolio',
+      'Games',
+      '3D Models',
+      'Local LLM',
+      'Wallpapers',
+      'Themes',
+      'Skills',
+      'Contact',
+      'Command',
+    ];
     for (const label of desktopIcons) {
       await assertText(client, label);
     }
 
     await assertClick(client, 'button', 'Start');
     await assertText(client, 'GitHub Repo');
+    await assertClick(client, '.start-items button', 'Wallpaper.cpl');
+    await assertText(client, 'Desktop Wallpaper');
+    const wallpaperNames = [
+      'KunalOS Teal Grid',
+      'Clouds 95',
+      'Starfield Boot',
+      'Circuit Lab',
+      'Sunset CRT',
+      'Green Meadow',
+      'Deep Ocean',
+      'Lava Debug',
+      'Graphite CAD',
+      'Arcade Floor',
+    ];
+    for (const wallpaper of wallpaperNames) {
+      await assertText(client, wallpaper);
+    }
+    await assertClick(client, '.choice-tile', 'Clouds 95', false);
+    const wallpaperChanged = await evaluate(
+      client,
+      'document.querySelector(".desktop-shell")?.classList.contains("wallpaper-clouds")',
+    );
+    if (!wallpaperChanged) {
+      fail('Wallpaper did not change to Clouds 95.');
+    }
+
+    await assertClick(client, 'button', 'Start');
+    await assertClick(client, '.start-items button', 'Themes.cpl');
+    await assertText(client, 'Theme Settings');
+    await assertText(client, 'Classic Gray');
+    await assertText(client, 'Midnight Workbench');
+    await assertText(client, 'Orchard Lab');
+    await assertClick(client, '.choice-tile', 'Midnight Workbench', false);
+    const themeChanged = await evaluate(
+      client,
+      'document.querySelector(".desktop-shell")?.classList.contains("theme-midnight")',
+    );
+    if (!themeChanged) {
+      fail('Theme did not change to Midnight Workbench.');
+    }
+
+    await assertClick(client, 'button', 'Start');
     await assertClick(client, '.start-items button', 'Games');
     await assertText(client, 'Games');
 
@@ -242,6 +335,29 @@ async function main() {
       await assertClick(client, '.program-tile', project, false);
       await assertText(client, project);
     }
+
+    await assertClick(client, 'button', 'Start');
+    await assertClick(client, '.start-items button', 'Local LLM Apps');
+    await assertText(client, 'Local LLM Apps, Browser Mode');
+    await assertText(client, 'without downloading Ollama, Python, models, or desktop apps');
+
+    const llmProjectNames = [
+      'Jarvis Local-First Assistant',
+      'Local LLM Life OS / Grounded RAG',
+      'Stage 3 Local Coding Agent',
+      'Talking AI Voice Assistant',
+    ];
+    for (const project of llmProjectNames) {
+      await assertText(client, project);
+    }
+
+    for (const project of llmProjectNames) {
+      await assertClick(client, '.program-tile', project, false);
+      await assertText(client, 'No download');
+    }
+
+    await assertClick(client, 'button', 'Diagnose my microphone flow');
+    await assertText(client, 'I would capture speech locally');
 
     const expectedLinks = [
       'https://github.com/kunalvaghani/Kunals_Repo',
@@ -283,6 +399,14 @@ async function main() {
     await assertClick(client, 'button', 'Start');
     await assertClick(client, '.start-items button', 'Command.com');
     await assertText(client, 'C:\\PORTFOLIO>');
+    await submitTerminalCommand(client, 'help');
+    await assertText(client, 'Available commands:');
+    await submitTerminalCommand(client, 'dir /local_llm');
+    await assertText(client, 'Jarvis Local-First Assistant');
+    await submitTerminalCommand(client, 'type mission.txt');
+    await assertText(client, 'Build fast, playful, technically grounded experiences');
+    await submitTerminalCommand(client, 'open llm');
+    await assertText(client, 'Local LLM Apps, Browser Mode');
 
     const imageFailures = await evaluate(
       client,
@@ -298,6 +422,12 @@ async function main() {
 
     const screenshot = await client.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
     await writeFile(screenshotPath, Buffer.from(screenshot.data, 'base64'));
+
+    await assertClick(client, 'button', 'Start');
+    await assertClick(client, '.start-items button', 'Power Off');
+    await assertText(client, 'It is now safe to turn off KunalOS.');
+    await assertClick(client, 'button', 'Power On');
+    await assertText(client, 'KUNALOS PORTFOLIO BIOS');
 
     client.close();
   } finally {
