@@ -1,0 +1,22 @@
+# Dependencies
+sentient-portfolio/node_modules/
+
+# Next.js build output
+sentient-portfolio/.next/
+sentient-portfolio/out/
+
+# Local QA/browser artifacts
+sentient-portfolio/.qa-chrome*/
+sentient-portfolio/portfolio-qa.png
+sentient-portfolio/dev-server.log
+sentient-portfolio/dev-server.err.log
+
+# Local TypeScript/cache artifacts
+sentient-portfolio/tsconfig.tsbuildinfo
+
+# Environment files
+sentient-portfolio/.env*.local
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
