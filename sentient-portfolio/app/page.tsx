@@ -80,6 +80,11 @@ type ThemeOption = {
   summary: string;
 };
 
+type WindowPosition = {
+  x: number;
+  y: number;
+};
+
 const assetBase = 'https://raw.githubusercontent.com/kunalvaghani/My-Portfolio/main/assets';
 
 const projects: Project[] = [
@@ -329,6 +334,8 @@ export default function Page() {
   const [startOpen, setStartOpen] = useState(false);
   const [wallpaper, setWallpaper] = useState<WallpaperId>('teal');
   const [theme, setTheme] = useState<ThemeId>('classic');
+  const [desktopWindows, setDesktopWindows] = useState(false);
+  const [windowPositions, setWindowPositions] = useState<Partial<Record<AppId, WindowPosition>>>({});
 
   useEffect(() => {
     if (poweredOff) {
@@ -337,6 +344,14 @@ export default function Page() {
     const timer = window.setTimeout(() => setBooted(true), 4700);
     return () => window.clearTimeout(timer);
   }, [poweredOff]);
+
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 801px)');
+    const updateDesktopMode = () => setDesktopWindows(media.matches);
+    updateDesktopMode();
+    media.addEventListener('change', updateDesktopMode);
+    return () => media.removeEventListener('change', updateDesktopMode);
+  }, []);
 
   const time = useMemo(
     () =>
@@ -363,12 +378,20 @@ export default function Page() {
     });
   }
 
+  function moveWindow(app: AppId, position: WindowPosition) {
+    setWindowPositions((current) => ({
+      ...current,
+      [app]: position,
+    }));
+  }
+
   function powerOff() {
     setPoweredOff(true);
     setBooted(false);
     setOpenApps(['about']);
     setActiveApp('about');
     setStartOpen(false);
+    setWindowPositions({});
   }
 
   function powerOn() {
@@ -410,8 +433,11 @@ export default function Page() {
             title={appNames[app]}
             active={activeApp === app}
             stackIndex={index}
+            draggable={desktopWindows}
+            position={desktopWindows ? windowPositions[app] : undefined}
             onFocus={() => setActiveApp(app)}
             onClose={() => closeApp(app)}
+            onMove={(position) => moveWindow(app, position)}
           >
             <AppContent
               app={app}
@@ -555,26 +581,71 @@ function RetroWindow({
   title,
   active,
   stackIndex,
+  draggable,
+  position,
   onFocus,
   onClose,
+  onMove,
   children,
 }: {
   id: AppId;
   title: string;
   active: boolean;
   stackIndex: number;
+  draggable: boolean;
+  position?: WindowPosition;
   onFocus: () => void;
   onClose: () => void;
+  onMove: (position: WindowPosition) => void;
   children: React.ReactNode;
 }) {
+  function startDrag(event: React.PointerEvent<HTMLElement>) {
+    if (!draggable || event.button !== 0) {
+      return;
+    }
+    if ((event.target as HTMLElement).closest('button')) {
+      return;
+    }
+
+    const windowElement = event.currentTarget.closest('.retro-window') as HTMLElement | null;
+    if (!windowElement) {
+      return;
+    }
+
+    onFocus();
+    event.preventDefault();
+    const rect = windowElement.getBoundingClientRect();
+    const offsetX = event.clientX - rect.left;
+    const offsetY = event.clientY - rect.top;
+
+    const handleMove = (moveEvent: PointerEvent) => {
+      const maxX = Math.max(8, window.innerWidth - rect.width - 8);
+      const maxY = Math.max(8, window.innerHeight - 42);
+      const nextX = Math.min(Math.max(8, moveEvent.clientX - offsetX), maxX);
+      const nextY = Math.min(Math.max(8, moveEvent.clientY - offsetY), maxY);
+      onMove({ x: Math.round(nextX), y: Math.round(nextY) });
+    };
+
+    const stopDrag = () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', stopDrag);
+    };
+
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', stopDrag);
+  }
+
   return (
     <section
-      className={`retro-window ${active ? 'active' : ''} window-${id}`}
-      style={{ zIndex: active ? 50 : 10 + stackIndex }}
+      className={`retro-window ${active ? 'active' : ''} ${draggable ? 'draggable' : ''} window-${id}`}
+      style={{
+        zIndex: active ? 50 : 10 + stackIndex,
+        ...(position ? { left: position.x, top: position.y } : {}),
+      }}
       onMouseDown={onFocus}
       aria-label={`${title} window`}
     >
-      <header className="titlebar">
+      <header className="titlebar" onPointerDown={startDrag}>
         <div className="titlebar-title">
           <span className="mini-program-icon" aria-hidden="true" />
           {title}

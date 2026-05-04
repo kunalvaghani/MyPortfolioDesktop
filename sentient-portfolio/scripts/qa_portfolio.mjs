@@ -10,6 +10,7 @@ const userDataDir = path.join(root, `.qa-chrome-${Date.now()}`);
 const screenshotPath = path.join(root, 'portfolio-qa.png');
 const port = 9223;
 const url = process.env.PORTFOLIO_URL || 'http://127.0.0.1:3000';
+const viewport = process.env.PORTFOLIO_VIEWPORT || '1440,1000';
 
 const failures = [];
 const browserErrors = [];
@@ -215,6 +216,72 @@ async function submitTerminalCommand(client, command) {
   await delay(250);
 }
 
+async function dragWindowByTitle(client, title, dx = 120, dy = 80) {
+  const rect = await evaluate(
+    client,
+    pageScript(`
+      const title = ${JSON.stringify(title)};
+      const win = [...document.querySelectorAll('.retro-window')]
+        .find((node) => node.getAttribute('aria-label') === title + ' window');
+      if (!win) return null;
+      const titlebar = win.querySelector('.titlebar');
+      if (!titlebar) return null;
+      const winRect = win.getBoundingClientRect();
+      const barRect = titlebar.getBoundingClientRect();
+      return {
+        x: winRect.left,
+        y: winRect.top,
+        startX: barRect.left + Math.min(90, Math.max(20, barRect.width / 3)),
+        startY: barRect.top + barRect.height / 2
+      };
+    `),
+  );
+  if (!rect) {
+    fail(`Could not find draggable window: ${title}`);
+    return;
+  }
+
+  await client.send('Input.dispatchMouseEvent', {
+    type: 'mousePressed',
+    x: rect.startX,
+    y: rect.startY,
+    button: 'left',
+    buttons: 1,
+    clickCount: 1,
+  });
+  await client.send('Input.dispatchMouseEvent', {
+    type: 'mouseMoved',
+    x: rect.startX + dx,
+    y: rect.startY + dy,
+    button: 'left',
+    buttons: 1,
+  });
+  await client.send('Input.dispatchMouseEvent', {
+    type: 'mouseReleased',
+    x: rect.startX + dx,
+    y: rect.startY + dy,
+    button: 'left',
+    buttons: 0,
+    clickCount: 1,
+  });
+  await delay(250);
+
+  const moved = await evaluate(
+    client,
+    pageScript(`
+      const title = ${JSON.stringify(title)};
+      const win = [...document.querySelectorAll('.retro-window')]
+        .find((node) => node.getAttribute('aria-label') === title + ' window');
+      if (!win) return false;
+      const next = win.getBoundingClientRect();
+      return Math.abs(next.left - ${rect.x}) > 20 || Math.abs(next.top - ${rect.y}) > 20;
+    `),
+  );
+  if (!moved) {
+    fail(`${title} window did not move when dragging the titlebar.`);
+  }
+}
+
 async function main() {
   await mkdir(userDataDir, { recursive: true });
 
@@ -225,7 +292,7 @@ async function main() {
     '--disable-gpu',
     '--no-first-run',
     '--no-default-browser-check',
-    '--window-size=1440,1000',
+    `--window-size=${viewport}`,
     url,
   ]);
 
@@ -271,6 +338,15 @@ async function main() {
     for (const label of desktopIcons) {
       await assertText(client, label);
     }
+    const viewportMetrics = await evaluate(
+      client,
+      '({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth, innerHeight: window.innerHeight })',
+    );
+    if (viewportMetrics.scrollWidth > viewportMetrics.innerWidth + 2) {
+      fail(
+        `Page has horizontal overflow at viewport ${viewportMetrics.innerWidth}x${viewportMetrics.innerHeight}.`,
+      );
+    }
     const desktopColumns = await evaluate(
       client,
       'getComputedStyle(document.querySelector(".desktop-grid")).gridTemplateColumns.split(" ").length',
@@ -283,6 +359,10 @@ async function main() {
     await assertText(client, 'GitHub Repo');
     await assertClick(client, '.start-items button', 'Mini Games');
     await assertText(client, 'Mini Games Arcade');
+    const isDesktopViewport = await evaluate(client, 'window.innerWidth > 800');
+    if (isDesktopViewport) {
+      await dragWindowByTitle(client, 'Mini Games');
+    }
     await assertText(client, 'Snake');
     await assertText(client, 'Snakes and Ladders');
     await assertText(client, 'Moto GT');
