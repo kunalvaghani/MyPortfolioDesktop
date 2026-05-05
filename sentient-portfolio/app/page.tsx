@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import * as THREE from 'three';
 
 type AppId =
   | 'about'
@@ -39,6 +40,7 @@ type Project = {
 };
 
 type ModelAsset = {
+  id: 'villageDayNight' | 'homeRobot' | 'voxelForest' | 'indianGada';
   title: string;
   summary: string;
   image: string;
@@ -172,23 +174,27 @@ const projects: Project[] = [
 
 const modelAssets: ModelAsset[] = [
   {
+    id: 'villageDayNight',
     title: 'Village Day / Night',
-    summary: 'Low-poly village scene with houses, cars, trees, and lighting studies.',
+    summary: 'High-detail village diorama with houses, road, trees, lights, flowers, and car props.',
     image: fallbackArt('Village Day / Night', '#008080'),
   },
   {
+    id: 'homeRobot',
     title: 'Home Robot',
-    summary: 'Friendly blue-and-white robot model with clean silhouette work.',
+    summary: 'High-poly home robot with rounded panels, articulated limbs, optics, and chrome joints.',
     image: fallbackArt('Home Robot', '#2046c7'),
   },
   {
-    title: 'Voxel Forest Scene',
-    summary: 'Minecraft-style isometric environment with cottage, trees, and pond.',
+    id: 'voxelForest',
+    title: 'Voxel Village Scene',
+    summary: 'Minecraft-style block village with pixel textures, chunky trees, water blocks, and cube houses.',
     image: fallbackArt('Voxel Forest Scene', '#007a39'),
   },
   {
+    id: 'indianGada',
     title: 'Indian Gada',
-    summary: 'Stylized gold mace model with faceted ornamental geometry.',
+    summary: 'Ornate high-detail gold mace with sculpted rings, beads, spikes, and polished metal.',
     image: fallbackArt('Indian Gada', '#b08a00'),
   },
 ];
@@ -971,11 +977,7 @@ function ModelsApp() {
     <div className="models-app">
       {modelAssets.map((model) => (
         <figure className="model-card" key={model.title}>
-          <SafeImage
-            src={model.image}
-            alt={`${model.title} 3D model artwork`}
-            fallbackTitle={model.title}
-          />
+          <ThreeModelViewer model={model} />
           <figcaption>
             <strong>{model.title}</strong>
             <span>{model.summary}</span>
@@ -984,6 +986,527 @@ function ModelsApp() {
       ))}
     </div>
   );
+}
+
+function ThreeModelViewer({ model }: { model: ModelAsset }) {
+  const mountRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) {
+      return undefined;
+    }
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x101623);
+
+    const isTallModel = model.id === 'homeRobot' || model.id === 'indianGada';
+    const camera = new THREE.PerspectiveCamera(isTallModel ? 34 : 30, 1, 0.1, 100);
+    camera.position.set(3.5, isTallModel ? 2.75 : 2.55, isTallModel ? 5.2 : 4.25);
+    camera.lookAt(0, isTallModel ? 1.18 : 0.7, 0);
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      preserveDrawingBuffer: true,
+    });
+    renderer.domElement.dataset.modelViewer = model.id;
+    renderer.domElement.setAttribute('aria-label', `${model.title} rotatable 3D model`);
+    renderer.setClearColor(0x101623, 1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    mount.appendChild(renderer.domElement);
+
+    const group = new THREE.Group();
+    scene.add(group);
+    buildPortfolioModel(model.id, group);
+    const bounds = new THREE.Box3().setFromObject(group);
+    const center = bounds.getCenter(new THREE.Vector3());
+    const size = bounds.getSize(new THREE.Vector3());
+    const maxSize = Math.max(size.x, size.y, size.z);
+    if (maxSize > 0) {
+      group.position.sub(center);
+      group.position.y += size.y * 0.5;
+      group.scale.setScalar(Math.min(isTallModel ? 1.45 : 1.9, (isTallModel ? 3.35 : 4) / maxSize));
+    }
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    keyLight.position.set(4, 6, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(1024, 1024);
+    scene.add(keyLight);
+    const rimLight = new THREE.DirectionalLight(0x73c7ff, 1.2);
+    rimLight.position.set(-4, 3, -3);
+    scene.add(rimLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+
+    const floor = new THREE.Mesh(
+      new THREE.CircleGeometry(2.25, 96),
+      new THREE.MeshStandardMaterial({ color: 0x1a2738, roughness: 0.85, metalness: 0.05 }),
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.04;
+    scene.add(floor);
+
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    let frame = 0;
+
+    const resize = () => {
+      const width = Math.max(220, mount.clientWidth);
+      const height = Math.max(190, Math.round(width * 0.72));
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    };
+
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(mount);
+    resize();
+
+    const onPointerDown = (event: PointerEvent) => {
+      dragging = true;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      renderer.domElement.setPointerCapture(event.pointerId);
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (!dragging) {
+        return;
+      }
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      group.rotation.y += dx * 0.01;
+      group.rotation.x = Math.max(-0.65, Math.min(0.65, group.rotation.x + dy * 0.007));
+      lastX = event.clientX;
+      lastY = event.clientY;
+    };
+
+    const onPointerUp = () => {
+      dragging = false;
+    };
+
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
+    renderer.domElement.addEventListener('pointercancel', onPointerUp);
+
+    const animate = () => {
+      if (!dragging) {
+        group.rotation.y += 0.006;
+      }
+      renderer.render(scene, camera);
+      frame = window.requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('pointermove', onPointerMove);
+      renderer.domElement.removeEventListener('pointerup', onPointerUp);
+      renderer.domElement.removeEventListener('pointercancel', onPointerUp);
+      const disposedTextures = new Set<THREE.Texture>();
+      group.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          materials.forEach((material) => {
+            Object.values(material).forEach((value) => {
+              if (value instanceof THREE.Texture && !disposedTextures.has(value)) {
+                value.dispose();
+                disposedTextures.add(value);
+              }
+            });
+            material.dispose();
+          });
+        }
+      });
+      floor.geometry.dispose();
+      (floor.material as THREE.Material).dispose();
+      renderer.dispose();
+      mount.replaceChildren();
+    };
+  }, [model.id, model.title]);
+
+  return (
+    <div
+      ref={mountRef}
+      className="model-viewer-3d"
+      role="img"
+      aria-label={`${model.title} rotatable 3D model`}
+    />
+  );
+}
+
+function buildPortfolioModel(model: ModelAsset['id'], group: THREE.Group) {
+  const pixelTexture = (colors: number[], size = 16) => {
+    const data = new Uint8Array(size * size * 4);
+    for (let y = 0; y < size; y += 1) {
+      for (let x = 0; x < size; x += 1) {
+        const index = (y * size + x) * 4;
+        const color = colors[(x * 3 + y * 5 + ((x ^ y) % colors.length)) % colors.length];
+        data[index] = (color >> 16) & 255;
+        data[index + 1] = (color >> 8) & 255;
+        data[index + 2] = color & 255;
+        data[index + 3] = 255;
+      }
+    }
+    const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.NearestFilter;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.needsUpdate = true;
+    return texture;
+  };
+
+  const blockMaterial = (colors: number[], repeat = 1) => {
+    const texture = pixelTexture(colors);
+    texture.repeat.set(repeat, repeat);
+    return new THREE.MeshStandardMaterial({ map: texture, roughness: 0.92 });
+  };
+
+  const mat = {
+    bark: new THREE.MeshStandardMaterial({ color: 0x76502f, roughness: 0.86 }),
+    brick: new THREE.MeshStandardMaterial({ color: 0xb86b45, roughness: 0.78 }),
+    chrome: new THREE.MeshPhysicalMaterial({ color: 0xc9d5df, roughness: 0.22, metalness: 0.68 }),
+    dark: new THREE.MeshStandardMaterial({ color: 0x111419, roughness: 0.7 }),
+    emissiveBlue: new THREE.MeshStandardMaterial({ color: 0x4ed7ff, emissive: 0x1262ff, emissiveIntensity: 1.4, roughness: 0.25 }),
+    foliageA: new THREE.MeshStandardMaterial({ color: 0x1f8e4c, roughness: 0.72 }),
+    foliageB: new THREE.MeshStandardMaterial({ color: 0x4fa83c, roughness: 0.74 }),
+    glass: new THREE.MeshPhysicalMaterial({ color: 0x85d8ff, roughness: 0.08, metalness: 0.05, transmission: 0.35, transparent: true, opacity: 0.72 }),
+    gold: new THREE.MeshPhysicalMaterial({ color: 0xf2c94c, roughness: 0.2, metalness: 0.78 }),
+    grass: new THREE.MeshStandardMaterial({ color: 0x2f8f4e, roughness: 0.82 }),
+    moss: new THREE.MeshStandardMaterial({ color: 0x6fb448, roughness: 0.88 }),
+    roof: new THREE.MeshStandardMaterial({ color: 0xa13b32, roughness: 0.66 }),
+    stone: new THREE.MeshStandardMaterial({ color: 0x8d8a7f, roughness: 0.9 }),
+    warmLight: new THREE.MeshStandardMaterial({ color: 0xffd77a, emissive: 0xffa51e, emissiveIntensity: 1.25, roughness: 0.35 }),
+    water: new THREE.MeshPhysicalMaterial({ color: 0x1aa8d8, roughness: 0.1, metalness: 0.02, transmission: 0.25, transparent: true, opacity: 0.76 }),
+    white: new THREE.MeshPhysicalMaterial({ color: 0xf3f6f8, roughness: 0.34, metalness: 0.18 }),
+    wood: new THREE.MeshStandardMaterial({ color: 0x7a4f2a, roughness: 0.82 }),
+  };
+
+  const voxelMat = {
+    dirt: blockMaterial([0x6f4325, 0x855531, 0x5b341f, 0x9a6a3f], 1.2),
+    grassBlock: blockMaterial([0x2f8f37, 0x41a343, 0x62b24f, 0x2f7c2f], 1.5),
+    leafBlock: blockMaterial([0x1f7d34, 0x2f913c, 0x3fa848, 0x165c27], 1.3),
+    logBlock: blockMaterial([0x70451f, 0x8a5a2c, 0x563115, 0x9a6738], 1.1),
+    plankBlock: blockMaterial([0x9b6838, 0xb47c45, 0x7f4f29, 0xc18a50], 1.2),
+    roofBlock: blockMaterial([0x9d332e, 0xb64636, 0x7c2827, 0xca5a42], 1.2),
+    stoneBlock: blockMaterial([0x727272, 0x8b8b82, 0x5d5d58, 0xa1a198], 1.25),
+    waterBlock: blockMaterial([0x1f75d8, 0x2699e6, 0x3db8ff, 0x1766b2], 1.1),
+    glassBlock: blockMaterial([0xffdf78, 0xf7bc3d, 0xffeea6, 0xd99223], 1),
+  };
+
+  const add = (mesh: THREE.Mesh, pos?: [number, number, number]) => {
+    if (pos) {
+      mesh.position.set(...pos);
+    }
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    group.add(mesh);
+    return mesh;
+  };
+
+  const box = (size: [number, number, number], pos: [number, number, number], material: THREE.Material, segments = 3) => {
+    return add(new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2], segments, segments, segments), material), pos);
+  };
+
+  const roundedBox = (
+    size: [number, number, number],
+    pos: [number, number, number],
+    material: THREE.Material,
+    radius = 0.08,
+    segments = 10,
+  ) => {
+    const [width, height, depth] = size;
+    const safeRadius = Math.min(radius, width * 0.22, height * 0.22);
+    const shape = new THREE.Shape();
+    const x = -width / 2;
+    const y = -height / 2;
+    shape.moveTo(x + safeRadius, y);
+    shape.lineTo(x + width - safeRadius, y);
+    shape.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
+    shape.lineTo(x + width, y + height - safeRadius);
+    shape.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
+    shape.lineTo(x + safeRadius, y + height);
+    shape.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
+    shape.lineTo(x, y + safeRadius);
+    shape.quadraticCurveTo(x, y, x + safeRadius, y);
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth,
+      bevelEnabled: true,
+      bevelSegments: segments,
+      bevelSize: safeRadius * 0.55,
+      bevelThickness: safeRadius * 0.55,
+      curveSegments: segments * 2,
+    });
+    geometry.center();
+    return add(new THREE.Mesh(geometry, material), pos);
+  };
+
+  const cyl = (
+    radiusTop: number,
+    radiusBottom: number,
+    height: number,
+    pos: [number, number, number],
+    material: THREE.Material,
+    segments = 64,
+  ) => add(new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments, 12), material), pos);
+
+  const sphere = (
+    radius: number,
+    pos: [number, number, number],
+    material: THREE.Material,
+    widthSegments = 64,
+    heightSegments = 32,
+  ) => add(new THREE.Mesh(new THREE.SphereGeometry(radius, widthSegments, heightSegments), material), pos);
+
+  const torus = (
+    radius: number,
+    tube: number,
+    pos: [number, number, number],
+    material: THREE.Material,
+    rotation: [number, number, number] = [0, 0, 0],
+  ) => {
+    const mesh = add(new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 18, 96), material), pos);
+    mesh.rotation.set(...rotation);
+    return mesh;
+  };
+
+  const addShingleRoof = (x: number, y: number, z: number, width: number, depth: number, material: THREE.Material) => {
+    const roof = add(new THREE.Mesh(new THREE.ConeGeometry(width, 0.58, 4, 10), material), [x, y, z]);
+    roof.rotation.y = Math.PI / 4;
+    roof.scale.z = depth / width;
+    for (let row = 0; row < 4; row += 1) {
+      const shingle = box([width * 1.05, 0.035, 0.045], [x, y - 0.18 + row * 0.09, z - depth * 0.36 + row * 0.15], mat.wood, 2);
+      shingle.rotation.x = -0.52;
+    }
+    return roof;
+  };
+
+  const addTree = (x: number, z: number, scale = 1, pine = false) => {
+    cyl(0.045 * scale, 0.075 * scale, 0.55 * scale, [x, 0.32 * scale, z], mat.bark, 28);
+    if (pine) {
+      [0, 1, 2].forEach((level) => {
+        const top = add(new THREE.Mesh(new THREE.ConeGeometry((0.33 - level * 0.06) * scale, 0.55 * scale, 28, 6), level % 2 ? mat.foliageB : mat.foliageA), [x, (0.62 + level * 0.23) * scale, z]);
+        top.rotation.y = level * 0.35;
+      });
+    } else {
+      sphere(0.24 * scale, [x - 0.08 * scale, 0.72 * scale, z], mat.foliageA, 32, 18);
+      sphere(0.22 * scale, [x + 0.14 * scale, 0.77 * scale, z + 0.05 * scale], mat.foliageB, 32, 18);
+      sphere(0.2 * scale, [x, 0.95 * scale, z - 0.08 * scale], mat.foliageA, 32, 18);
+    }
+  };
+
+  const addHouse = (x: number, z: number, width = 0.7, depth = 0.58, colorMaterial: THREE.Material = mat.wood) => {
+    roundedBox([width, 0.5, depth], [x, 0.32, z], colorMaterial, 0.035, 6);
+    addShingleRoof(x, 0.79, z, width * 0.62, depth, mat.roof);
+    box([0.16, 0.26, 0.035], [x - width * 0.18, 0.22, z + depth * 0.52], mat.dark, 2);
+    box([0.14, 0.1, 0.04], [x + width * 0.2, 0.4, z + depth * 0.52], mat.warmLight, 2);
+    box([0.08, 0.22, 0.08], [x + width * 0.25, 0.82, z - depth * 0.08], mat.brick, 3);
+  };
+
+  if (model === 'homeRobot') {
+    roundedBox([1.05, 1.22, 0.68], [0, 0.92, 0], mat.white, 0.16, 14);
+    roundedBox([0.78, 0.58, 0.62], [0, 1.84, 0], mat.white, 0.14, 14);
+    roundedBox([0.66, 0.22, 0.08], [0, 1.87, 0.34], mat.glass, 0.04, 8);
+    sphere(0.07, [-0.2, 1.9, 0.39], mat.emissiveBlue, 32, 18);
+    sphere(0.07, [0.2, 1.9, 0.39], mat.emissiveBlue, 32, 18);
+    roundedBox([0.55, 0.34, 0.06], [0, 0.98, 0.38], mat.dark, 0.04, 8);
+    for (let i = 0; i < 6; i += 1) {
+      box([0.055, 0.26, 0.075], [-0.22 + i * 0.088, 0.99, 0.43], i % 2 ? mat.emissiveBlue : mat.chrome, 2);
+    }
+    [-1, 1].forEach((side) => {
+      sphere(0.18, [side * 0.66, 1.4, 0], mat.chrome, 32, 18);
+      const upper = cyl(0.105, 0.105, 0.64, [side * 0.9, 1.02, 0], mat.white, 48);
+      upper.rotation.z = side * 0.22;
+      const elbow = sphere(0.13, [side * 0.98, 0.68, 0], mat.chrome, 32, 18);
+      elbow.scale.y = 0.78;
+      const forearm = cyl(0.09, 0.11, 0.48, [side * 1.02, 0.42, 0.02], mat.white, 48);
+      forearm.rotation.z = side * -0.1;
+      sphere(0.13, [side * 1.05, 0.16, 0.04], mat.dark, 32, 18);
+      [-0.08, 0, 0.08].forEach((offset) => {
+        const finger = cyl(0.018, 0.022, 0.2, [side * (1.1 + offset), 0.05, 0.11], mat.dark, 18);
+        finger.rotation.x = Math.PI / 2;
+      });
+    });
+    [-1, 1].forEach((side) => {
+      const hip = sphere(0.15, [side * 0.32, 0.3, 0], mat.chrome, 32, 18);
+      hip.scale.y = 0.72;
+      const leg = cyl(0.12, 0.1, 0.46, [side * 0.34, 0.04, 0], mat.white, 48);
+      leg.rotation.z = side * 0.05;
+      roundedBox([0.35, 0.14, 0.48], [side * 0.34, -0.24, 0.08], mat.dark, 0.05, 8);
+    });
+    cyl(0.035, 0.045, 0.4, [0, 2.28, 0], mat.dark, 32);
+    sphere(0.12, [0, 2.52, 0], mat.emissiveBlue, 40, 20);
+    torus(0.68, 0.018, [0, 1.2, 0], mat.chrome, [Math.PI / 2, 0, 0]);
+    return;
+  }
+
+  if (model === 'indianGada') {
+    const alignToDirection = (mesh: THREE.Mesh, direction: THREE.Vector3) => {
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
+    };
+    const coneSpike = (direction: THREE.Vector3, center: THREE.Vector3, baseRadius: number, length: number) => {
+      const spike = add(new THREE.Mesh(new THREE.ConeGeometry(baseRadius, length, 32, 8), mat.gold));
+      alignToDirection(spike, direction);
+      spike.position.copy(center.clone().add(direction.clone().normalize().multiplyScalar(0.64 + length * 0.5)));
+      return spike;
+    };
+
+    cyl(0.09, 0.11, 2.15, [0, 0.75, 0], mat.gold, 128);
+    cyl(0.13, 0.15, 0.26, [0, -0.26, 0], mat.gold, 128);
+    const pommel = sphere(0.22, [0, -0.46, 0], mat.gold, 96, 48);
+    pommel.scale.y = 0.72;
+    [-0.14, 0.18, 0.5, 0.82, 1.14].forEach((y) => {
+      torus(0.155, 0.022, [0, y, 0], mat.gold, [Math.PI / 2, 0, 0]);
+      torus(0.102, 0.014, [0, y + 0.09, 0], mat.gold, [Math.PI / 2, 0, 0]);
+    });
+    for (let row = 0; row < 4; row += 1) {
+      for (let i = 0; i < 12; i += 1) {
+        const angle = (Math.PI * 2 * i) / 12 + row * 0.25;
+        sphere(
+          0.022,
+          [Math.cos(angle) * 0.125, 0.04 + row * 0.24, Math.sin(angle) * 0.125],
+          mat.gold,
+          16,
+          10,
+        );
+      }
+    }
+    cyl(0.36, 0.48, 0.42, [0, 1.64, 0], mat.gold, 128);
+    const headCenter = new THREE.Vector3(0, 2.18, 0);
+    const head = sphere(0.68, [headCenter.x, headCenter.y, headCenter.z], mat.gold, 128, 64);
+    head.scale.y = 0.92;
+    torus(0.54, 0.035, [0, 2.18, 0], mat.gold, [Math.PI / 2, 0, 0]);
+    torus(0.46, 0.026, [0, 2.18, 0], mat.gold, [0, Math.PI / 2, 0]);
+    torus(0.46, 0.026, [0, 2.18, 0], mat.gold, [0, 0, Math.PI / 2]);
+    Array.from({ length: 16 }).forEach((_, index) => {
+      const angle = (Math.PI * 2 * index) / 16;
+      coneSpike(new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)), headCenter, 0.065, 0.34);
+    });
+    [new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -1, 0)].forEach((direction) => {
+      coneSpike(direction, headCenter, 0.07, 0.32);
+    });
+    Array.from({ length: 24 }).forEach((_, index) => {
+      const angle = (Math.PI * 2 * index) / 24;
+      sphere(0.032, [Math.cos(angle) * 0.42, 2.72, Math.sin(angle) * 0.42], mat.gold, 18, 10);
+      sphere(0.028, [Math.cos(angle) * 0.34, 1.55, Math.sin(angle) * 0.34], mat.gold, 18, 10);
+    });
+    return;
+  }
+
+  const stage = roundedBox([3.35, 0.12, 2.58], [0, -0.03, 0], mat.grass, 0.05, 6);
+  stage.receiveShadow = true;
+
+  if (model === 'voxelForest') {
+    stage.visible = false;
+    const unit = 0.22;
+    const voxel = (gx: number, gy: number, gz: number, material: THREE.Material, size: [number, number, number] = [1, 1, 1]) => {
+      box(
+        [unit * size[0], unit * size[1], unit * size[2]],
+        [gx * unit, gy * unit + (unit * size[1]) / 2, gz * unit],
+        material,
+        1,
+      );
+    };
+    const cubeStack = (gx: number, gz: number, height: number, material: THREE.Material) => {
+      for (let y = 0; y < height; y += 1) {
+        voxel(gx, y, gz, material);
+      }
+    };
+    const addVoxelTree = (gx: number, gz: number, height = 3) => {
+      cubeStack(gx, gz, height, voxelMat.logBlock);
+      for (let y = height - 1; y <= height + 1; y += 1) {
+        for (let x = -1; x <= 1; x += 1) {
+          for (let z = -1; z <= 1; z += 1) {
+            if (Math.abs(x) + Math.abs(z) < 3 && !(x === 0 && z === 0 && y < height)) {
+              voxel(gx + x, y, gz + z, voxelMat.leafBlock);
+            }
+          }
+        }
+      }
+      voxel(gx, height + 2, gz, voxelMat.leafBlock);
+    };
+    const addVoxelHouse = (gx: number, gz: number, width: number, depth: number) => {
+      for (let x = 0; x < width; x += 1) {
+        for (let z = 0; z < depth; z += 1) {
+          if (x === 0 || z === 0 || x === width - 1 || z === depth - 1) {
+            voxel(gx + x, 1, gz + z, voxelMat.plankBlock);
+            voxel(gx + x, 2, gz + z, voxelMat.plankBlock);
+          }
+        }
+      }
+      voxel(gx + 1, 1, gz, mat.dark);
+      voxel(gx + width - 2, 2, gz, voxelMat.glassBlock);
+      for (let layer = 0; layer < 3; layer += 1) {
+        for (let x = -layer; x < width + layer; x += 1) {
+          for (let z = -layer; z < depth + layer; z += 1) {
+            const edge = x === -layer || z === -layer || x === width + layer - 1 || z === depth + layer - 1;
+            if (edge || layer === 2) {
+              voxel(gx + x, 3 + layer, gz + z, voxelMat.roofBlock);
+            }
+          }
+        }
+      }
+      voxel(gx + width, 2, gz + depth - 1, voxelMat.stoneBlock);
+      voxel(gx + width, 3, gz + depth - 1, voxelMat.stoneBlock);
+    };
+
+    for (let gx = -7; gx <= 7; gx += 1) {
+      for (let gz = -5; gz <= 5; gz += 1) {
+        const pond = gx >= 2 && gx <= 5 && gz >= -4 && gz <= -2;
+        voxel(gx, -1, gz, voxelMat.dirt);
+        voxel(gx, 0, gz, pond ? voxelMat.waterBlock : voxelMat.grassBlock);
+      }
+    }
+    addVoxelHouse(-5, -1, 4, 4);
+    addVoxelHouse(1, 0, 3, 3);
+    addVoxelTree(-7, -4, 3);
+    addVoxelTree(6, 2, 4);
+    addVoxelTree(-1, 4, 3);
+    addVoxelTree(6, -5, 3);
+    addVoxelTree(-6, 5, 4);
+    for (let i = 0; i < 26; i += 1) {
+      const gx = -7 + (i * 3) % 15;
+      const gz = -5 + (i * 5) % 11;
+      if (!(gx >= 2 && gx <= 5 && gz >= -4 && gz <= -2)) {
+        voxel(gx, 1, gz, i % 3 ? voxelMat.leafBlock : voxelMat.stoneBlock, [0.42, 0.42, 0.42]);
+      }
+    }
+    [-2, -1, 0, 1, 2].forEach((gx) => {
+      voxel(gx, 1, -5, voxelMat.plankBlock, [1, 0.25, 1]);
+    });
+    return;
+  }
+
+  addHouse(-0.9, -0.35, 0.74, 0.62, mat.wood);
+  addHouse(0.78, 0.38, 0.76, 0.6, mat.brick);
+  addHouse(0.05, -0.88, 0.64, 0.55, mat.wood);
+  addHouse(-1.15, 0.72, 0.56, 0.5, mat.stone);
+  const road = roundedBox([2.8, 0.035, 0.34], [0.18, 0.035, -0.12], mat.stone, 0.04, 8);
+  road.rotation.y = -0.22;
+  roundedBox([0.5, 0.18, 0.22], [1.05, 0.14, -0.5], mat.emissiveBlue, 0.04, 8);
+  sphere(0.06, [0.86, 0.25, -0.39], mat.dark, 18, 10);
+  sphere(0.06, [1.2, 0.25, -0.6], mat.dark, 18, 10);
+  [[-1.4, 0.95, 0.8], [1.25, -0.82, 0.8], [1.38, 0.92, 0.68], [-1.45, -0.95, 0.62]].forEach(([x, z, scale], index) => {
+    addTree(x, z, scale, index % 2 === 1);
+  });
+  [-1.1, -0.55, 0.1, 0.78, 1.34].forEach((x, index) => {
+    cyl(0.018, 0.025, 0.62, [x, 0.33, 0.08 + (index % 2) * 0.18], mat.dark, 24);
+    sphere(0.07, [x, 0.69, 0.08 + (index % 2) * 0.18], index % 2 ? mat.warmLight : mat.emissiveBlue, 24, 12);
+  });
+  for (let i = 0; i < 28; i += 1) {
+    const flower = sphere(0.025, [-1.55 + (i % 8) * 0.42, 0.08, -1.12 + Math.floor(i / 8) * 0.45], i % 3 ? mat.warmLight : mat.emissiveBlue, 12, 8);
+    flower.scale.y = 0.55;
+  }
 }
 
 function ContactApp() {

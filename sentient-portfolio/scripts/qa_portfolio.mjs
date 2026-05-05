@@ -8,7 +8,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const userDataDir = path.join(root, `.qa-chrome-${Date.now()}`);
 const screenshotPath = path.join(root, 'portfolio-qa.png');
-const port = 9223;
+const modelsScreenshotPath = path.join(root, 'portfolio-models-qa.png');
+const port = Number(process.env.PORTFOLIO_DEBUG_PORT || 9300 + Math.floor(Math.random() * 500));
 const url = process.env.PORTFOLIO_URL || 'http://127.0.0.1:3000';
 const viewport = process.env.PORTFOLIO_VIEWPORT || '1440,1000';
 
@@ -95,7 +96,7 @@ function cdpConnect(webSocketDebuggerUrl) {
     }
 
     if (message.method === 'Runtime.exceptionThrown') {
-      browserErrors.push(message.params.exceptionDetails.text);
+      browserErrors.push(message.params.exceptionDetails.exception?.description || message.params.exceptionDetails.text);
     }
     if (message.method === 'Log.entryAdded' && ['error', 'warning'].includes(message.params.entry.level)) {
       browserErrors.push(message.params.entry.text);
@@ -128,7 +129,7 @@ async function evaluate(client, expression, returnByValue = true) {
     returnByValue,
   });
   if (result.exceptionDetails) {
-    throw new Error(result.exceptionDetails.text);
+    throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
   }
   return result.result?.value;
 }
@@ -320,6 +321,19 @@ async function main() {
 
     await assertText(client, 'KUNALOS PORTFOLIO BIOS');
     await assertClick(client, 'button', 'Press Enter to continue');
+    await client.send('Input.dispatchKeyEvent', {
+      type: 'keyDown',
+      key: 'Enter',
+      code: 'Enter',
+      windowsVirtualKeyCode: 13,
+    });
+    await client.send('Input.dispatchKeyEvent', {
+      type: 'keyUp',
+      key: 'Enter',
+      code: 'Enter',
+      windowsVirtualKeyCode: 13,
+    });
+    await delay(5200);
     await assertText(client, 'Kunal Vaghani');
     await assertText(client, 'Game Developer and Engine Programmer');
 
@@ -349,7 +363,7 @@ async function main() {
     }
     const desktopColumns = await evaluate(
       client,
-      'getComputedStyle(document.querySelector(".desktop-grid")).gridTemplateColumns.split(" ").length',
+      'document.querySelector(".desktop-grid") ? getComputedStyle(document.querySelector(".desktop-grid")).gridTemplateColumns.split(" ").length : 0',
     );
     if (desktopColumns < 2) {
       fail('Desktop icons did not arrange into a cleaner multi-column launcher.');
@@ -513,6 +527,70 @@ async function main() {
     await assertClick(client, '.start-items button', 'Models');
     await assertText(client, 'Village Day / Night');
     await assertText(client, 'Indian Gada');
+    await delay(600);
+    const modelCanvasReport = await evaluate(
+      client,
+      pageScript(`
+        const canvases = [...document.querySelectorAll('canvas[data-model-viewer]')];
+        const failures = [];
+        for (const canvas of canvases) {
+          const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+          if (!gl || gl.drawingBufferWidth === 0 || gl.drawingBufferHeight === 0) {
+            failures.push(canvas.dataset.modelViewer || 'unknown');
+            continue;
+          }
+          const points = [
+            [0.5, 0.5],
+            [0.34, 0.42],
+            [0.66, 0.42],
+            [0.42, 0.68],
+            [0.58, 0.68],
+          ];
+          const pixel = new Uint8Array(4);
+          let visibleSamples = 0;
+          for (const [x, y] of points) {
+            gl.readPixels(
+              Math.floor(gl.drawingBufferWidth * x),
+              Math.floor(gl.drawingBufferHeight * y),
+              1,
+              1,
+              gl.RGBA,
+              gl.UNSIGNED_BYTE,
+              pixel,
+            );
+            if (pixel[3] > 0 && pixel[0] + pixel[1] + pixel[2] > 40) {
+              visibleSamples += 1;
+            }
+          }
+          if (visibleSamples < 2) {
+            failures.push(canvas.dataset.modelViewer || 'unknown');
+          }
+        }
+        return { count: canvases.length, failures };
+      `),
+    );
+    if (modelCanvasReport.count < 4) {
+      fail(`Expected 4 rotatable 3D model canvases, found ${modelCanvasReport.count}.`);
+    }
+    for (const model of modelCanvasReport.failures) {
+      fail(`3D model canvas did not render visible pixels: ${model}`);
+    }
+    const modelAnimationChanged = await evaluate(
+      client,
+      pageScript(`
+        const canvas = document.querySelector('canvas[data-model-viewer]');
+        if (!canvas) return false;
+        const before = canvas.toDataURL();
+        return new Promise((resolve) => {
+          window.setTimeout(() => resolve(before !== canvas.toDataURL()), 500);
+        });
+      `),
+    );
+    if (!modelAnimationChanged) {
+      fail('3D model canvas did not visibly change across animation frames.');
+    }
+    const modelsScreenshot = await client.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
+    await writeFile(modelsScreenshotPath, Buffer.from(modelsScreenshot.data, 'base64'));
 
     await assertClick(client, 'button', 'Start');
     await assertClick(client, '.start-items button', 'Command.com');
