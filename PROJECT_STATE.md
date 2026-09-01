@@ -23,6 +23,8 @@ Production release complete; ongoing content maintenance
 - Upgraded the application to Next.js 16.3.4 and React 19.2.0.
 - Removed unused historical client dependencies from the production application.
 - Verified, previewed, and promoted the release to the existing Vercel project.
+- Added Kunal's professional portrait and reordered the page around his profile, education, certifications, and skills before project work.
+- Renamed the same Vercel project in place to `kunal-vaghani-portfolio` and added the new public production domain.
 
 ## Currently Working On
 
@@ -59,7 +61,7 @@ None. The Vercel connector is scoped to a different team, but the authenticated 
 
 ## Performance Baseline
 
-Local production Lighthouse on 2026-09-01: performance 96, accessibility 100, best practices 100, SEO 100; FCP 1.1 s, LCP 2.7 s, TBT 60 ms, CLS 0, Speed Index 2.1 s.
+Production Lighthouse after the portrait-led redesign on 2026-09-01: performance 91, accessibility 100, best practices 100, SEO 100; FCP 2.2 s, LCP 2.2 s, TBT 40 ms, CLS 0.
 
 The emitted static chunks contain no Three.js, React Three Fiber, Framer Motion, or d3-force signatures.
 

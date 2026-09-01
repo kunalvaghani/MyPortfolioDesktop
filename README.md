@@ -1,6 +1,6 @@
 # Kunal Vaghani Portfolio
 
-This repository contains the source for [sentient-portfolio.vercel.app](https://sentient-portfolio.vercel.app/). The application lives in `sentient-portfolio/` and uses the Next.js App Router.
+This repository contains the source for [kunal-vaghani-portfolio.vercel.app](https://kunal-vaghani-portfolio.vercel.app/). The application lives in `sentient-portfolio/` and uses the Next.js App Router.
 
 ## Why the homepage changed
 
@@ -42,7 +42,7 @@ The QA script accepts `PORTFOLIO_URL` and captures responsive screenshots under 
 
 ## Deployment
 
-Production remains attached to the existing Vercel project that owns `sentient-portfolio.vercel.app`. Never allow an unlinked CLI command to create a replacement project. Verify `.vercel/project.json`, the authenticated scope, project ID, and production alias before deploying.
+Production remains attached to Vercel project ID `prj_dyR1ib0NQQN7meSnVHXpYlWs5L6L`, now named `kunal-vaghani-portfolio`. Never allow an unlinked CLI command to create a replacement project. Verify `.vercel/project.json`, the authenticated scope, project ID, and production alias before deploying.
 
 Required release order:
 
@@ -50,6 +50,6 @@ Required release order:
 2. Preview deployment
 3. Preview browser and visual verification
 4. Promote the verified artifact or deploy it to production using the existing workflow
-5. Re-run QA against `https://sentient-portfolio.vercel.app/`
+5. Re-run QA against `https://kunal-vaghani-portfolio.vercel.app/`
 
-The 2026-09-01 redesign followed this sequence: preview deployment, authenticated route verification, promotion of that preview, public production route verification, and full production browser QA.
+The project was renamed in place on 2026-09-01; the project ID did not change. `sentient-portfolio.vercel.app` remains attached as a compatibility alias while `kunal-vaghani-portfolio.vercel.app` is the canonical public address.

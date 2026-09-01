@@ -206,7 +206,7 @@ async function verifyHome(client, viewport) {
 
   if (!report.title.includes('AI/ML Systems')) fail(`Unexpected title: ${report.title}`);
   if (report.h1Count !== 1) fail(`Expected one h1, found ${report.h1Count}.`);
-  if (!report.h1.includes('Building local AI systems')) fail(`Unexpected hero heading: ${report.h1}`);
+  if (!report.h1.includes('Kunal Vaghani')) fail(`Unexpected hero heading: ${report.h1}`);
   if (report.bodyText.includes('KUNALOS PORTFOLIO BIOS')) fail('Legacy BIOS is visible on the root route.');
   if (report.nextError) fail('Next.js error overlay detected.');
   if (report.scrollWidth > report.innerWidth + 2) fail(`Horizontal overflow: ${report.scrollWidth}px > ${report.innerWidth}px.`);

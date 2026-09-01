@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-bod
 const robotoMono = Roboto_Mono({ subsets: ['latin'], display: 'swap', variable: '--font-mono' });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://sentient-portfolio.vercel.app'),
+  metadataBase: new URL('https://kunal-vaghani-portfolio.vercel.app'),
   title: {
     default: 'Kunal Vaghani — AI/ML Systems & Software Engineer',
     template: '%s · Kunal Vaghani',

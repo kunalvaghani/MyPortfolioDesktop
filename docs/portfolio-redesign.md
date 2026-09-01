@@ -47,6 +47,6 @@ Edit `sentient-portfolio/app/data/portfolio.ts`. Keep explanatory copy concise, 
 
 ## Release record
 
-The redesign was released on 2026-09-01 through the pre-existing `sentient-portfolio` Vercel project. The tested preview artifact was promoted to production and verified at `https://sentient-portfolio.vercel.app/`.
+The redesign was released on 2026-09-01 through the pre-existing Vercel project. That same project ID was later renamed from `sentient-portfolio` to `kunal-vaghani-portfolio`; no duplicate project was created. The canonical production address is `https://kunal-vaghani-portfolio.vercel.app/`, and the former address remains as a compatibility alias.
 
-Release verification included a clean dependency install, TypeScript, ESLint, an optimized Next.js build, zero npm audit findings, responsive browser checks at three breakpoints, the KunalOS archive route, metadata routes, and Lighthouse. The retained Lighthouse baseline is 96 performance and 100 for accessibility, best practices, and SEO.
+Release verification included TypeScript, ESLint, an optimized Next.js build, responsive browser checks at three breakpoints, the KunalOS archive route, metadata routes, and Lighthouse. After adding Kunal's portrait and moving profile, education, certifications, and skills ahead of projects, the production Lighthouse result is 91 performance and 100 for accessibility, best practices, and SEO.

@@ -1,7 +1,9 @@
+import Image from 'next/image';
 import { ArchitectureDiagram } from '@/app/components/portfolio/ArchitectureDiagram';
 import { Navigation } from '@/app/components/portfolio/Navigation';
 import { ProjectCard } from '@/app/components/portfolio/ProjectCard';
 import { SectionHeading } from '@/app/components/portfolio/SectionHeading';
+import profilePortrait from '@/app/assets/kunal-vaghani.png';
 import {
   certifications,
   education,
@@ -15,7 +17,7 @@ import {
   skillGroups,
 } from '@/app/data/portfolio';
 
-const siteUrl = 'https://sentient-portfolio.vercel.app';
+const siteUrl = 'https://kunal-vaghani-portfolio.vercel.app';
 
 function ArrowIcon() {
   return <span aria-hidden="true">↗</span>;
@@ -67,11 +69,12 @@ export default function Home() {
           <div className="hero-grid page-shell">
             <div className="hero-copy">
               <p className="hero-eyebrow"><span aria-hidden="true" />{profile.eyebrow}</p>
-              <h1>{profile.headline}</h1>
+              <h1>{profile.name}</h1>
+              <p className="hero-role">{profile.headline}</p>
               <p className="hero-intro">{profile.introduction}</p>
 
               <div className="hero-actions">
-                <a className="button button-primary" href="#projects">Explore flagship systems <span aria-hidden="true">↓</span></a>
+                <a className="button button-primary" href="#profile">About and education <span aria-hidden="true">↓</span></a>
                 <a className="button button-secondary" href={profile.github} target="_blank" rel="noreferrer">
                   <GitHubIcon /> GitHub
                 </a>
@@ -86,50 +89,94 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="hero-system" aria-label="Local AI runtime flow">
-              <div className="system-window">
-                <div className="system-window-bar">
-                  <span>runtime / request_001</span>
-                  <span className="window-status">inspectable</span>
-                </div>
-                <div className="system-path">
-                  <div className="system-node system-node-input">
-                    <span>Input</span>
-                    <strong>User task</strong>
-                  </div>
-                  <div className="system-connector" aria-hidden="true"><span /></div>
-                  <div className="system-row">
-                    <div className="system-node"><span>Runtime</span><strong>Agent state</strong></div>
-                    <div className="system-node"><span>Policy</span><strong>Scheduler</strong></div>
-                  </div>
-                  <div className="system-connector" aria-hidden="true"><span /></div>
-                  <div className="system-row">
-                    <div className="system-node"><span>Evidence</span><strong>Retrieval</strong></div>
-                    <div className="system-node"><span>Compute</span><strong>Model router</strong></div>
-                  </div>
-                  <div className="system-connector" aria-hidden="true"><span /></div>
-                  <div className="system-node system-node-output">
-                    <span>Local hardware</span>
-                    <strong>Guarded inference + trace</strong>
-                  </div>
-                </div>
-                <div className="system-telemetry">
-                  <span><i /> permission checked</span>
-                  <span><i /> resource admitted</span>
-                  <span><i /> evidence retained</span>
+            <div className="hero-portrait">
+              <div className="portrait-frame">
+                <Image
+                  src={profilePortrait}
+                  alt="Professional portrait of Kunal Vaghani"
+                  priority
+                  sizes="(max-width: 880px) 82vw, 430px"
+                />
+              </div>
+              <div className="portrait-card" aria-label="Current profile summary">
+                <p>Current direction</p>
+                <strong>AI/ML systems + software engineering</strong>
+                <div className="portrait-facts">
+                  <span><small>Studying</small>B.Tech · AI &amp; Data Science</span>
+                  <span><small>Foundation</small>Advanced Diploma · Game Programming</span>
                 </div>
               </div>
             </div>
           </div>
+        </section>
 
-          <div className="constraint-strip page-shell" aria-label="Hardware and operating constraints">
-            {hardwareContext.map((item) => (
-              <div key={item.label}>
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-                <small>{item.detail}</small>
+        <section className="section page-shell profile-section" id="profile">
+          <div className="profile-heading">
+            <SectionHeading
+              eyebrow="About Kunal"
+              title="A software engineer growing through AI, data, and real-time systems."
+              description="My current work connects local AI infrastructure with the performance discipline I developed through C++, graphics, and game systems. I care about systems that can be inspected, measured, and explained."
+            />
+            <div className="profile-principles" aria-label="Engineering priorities">
+              <span>Local-first</span>
+              <span>Evidence-led</span>
+              <span>Hardware-aware</span>
+              <span>Reliability-minded</span>
+            </div>
+          </div>
+
+          <section className="education-section" id="education">
+            <div className="education-column">
+              <SectionHeading eyebrow="Education" title="Current study and technical foundation." />
+              <div className="education-list">
+                {education.map((item) => (
+                  <article className={item.primary ? 'education-primary' : ''} key={item.institution}>
+                    <div className="education-year">{item.period}</div>
+                    <div>
+                      <h3>{item.institution}</h3>
+                      <p>{item.credential}</p>
+                    </div>
+                  </article>
+                ))}
               </div>
-            ))}
+              <p className="recognition"><span aria-hidden="true">✦</span>{recognition}</p>
+            </div>
+
+            <div className="certification-column">
+              <SectionHeading eyebrow="Recent learning" title="Certifications" />
+              <div className="certification-list">
+                {certifications.map((certificate) => (
+                  <article key={certificate.title}>
+                    <div>
+                      <p>{certificate.issuer}</p>
+                      <h3>{certificate.title}</h3>
+                    </div>
+                    <time>{certificate.date}</time>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section className="section skills-section" id="skills">
+          <div className="page-shell">
+            <SectionHeading
+              eyebrow="Capabilities"
+              title="What I work with, grouped by engineering domain."
+              description="This is the technical foundation behind my current systems work—not a list of percentage scores."
+            />
+            <div className="skills-grid">
+              {skillGroups.map((group, index) => (
+                <article key={group.title}>
+                  <span className="skill-number">0{index + 1}</span>
+                  <h3>{group.title}</h3>
+                  <ul>
+                    {group.items.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -140,6 +187,15 @@ export default function Home() {
             description="The runtime, retrieval, and performance work share a single operating constraint: useful AI should be inspectable, measurable, and practical on local hardware."
           />
           <ArchitectureDiagram />
+          <div className="constraint-strip" aria-label="Hardware and operating constraints">
+            {hardwareContext.map((item) => (
+              <div key={item.label}>
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+                <small>{item.detail}</small>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="section projects-section" id="projects">
@@ -223,60 +279,6 @@ export default function Home() {
                 <a href={project.href} target="_blank" rel="noreferrer">View source evidence <ArrowIcon /></a>
               </article>
             ))}
-          </div>
-        </section>
-
-        <section className="section skills-section" id="skills">
-          <div className="page-shell">
-            <SectionHeading
-              eyebrow="Capabilities"
-              title="Skills grouped by engineering domain, not percentages."
-              description="The emphasis is on systems that can be explained, profiled, tested, and maintained."
-            />
-            <div className="skills-grid">
-              {skillGroups.map((group, index) => (
-                <article key={group.title}>
-                  <span className="skill-number">0{index + 1}</span>
-                  <h3>{group.title}</h3>
-                  <ul>
-                    {group.items.map((item) => <li key={item}>{item}</li>)}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section page-shell education-section" id="education">
-          <div className="education-column">
-            <SectionHeading eyebrow="Education" title="Current study and technical foundation." />
-            <div className="education-list">
-              {education.map((item) => (
-                <article className={item.primary ? 'education-primary' : ''} key={item.institution}>
-                  <div className="education-year">{item.period}</div>
-                  <div>
-                    <h3>{item.institution}</h3>
-                    <p>{item.credential}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <p className="recognition"><span aria-hidden="true">✦</span>{recognition}</p>
-          </div>
-
-          <div className="certification-column">
-            <SectionHeading eyebrow="Recent learning" title="Certifications" />
-            <div className="certification-list">
-              {certifications.map((certificate) => (
-                <article key={certificate.title}>
-                  <div>
-                    <p>{certificate.issuer}</p>
-                    <h3>{certificate.title}</h3>
-                  </div>
-                  <time>{certificate.date}</time>
-                </article>
-              ))}
-            </div>
           </div>
         </section>
 

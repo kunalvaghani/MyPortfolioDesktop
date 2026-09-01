@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 
 const links = [
-  ['Systems', '#systems'],
+  ['About', '#profile'],
+  ['Education', '#education'],
+  ['Skills', '#skills'],
   ['Projects', '#projects'],
   ['Experience', '#experience'],
-  ['Skills', '#skills'],
-  ['Education', '#education'],
   ['Contact', '#contact'],
 ] as const;
 
