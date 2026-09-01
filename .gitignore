@@ -17,6 +17,12 @@ sentient-portfolio/tsconfig.tsbuildinfo
 # Environment files
 sentient-portfolio/.env*.local
 
+# Read-only web research cache
+.firecrawl/
+
+# Portfolio QA screenshots and reports
+sentient-portfolio/qa-artifacts/
+
 # OS/editor noise
 .DS_Store
 Thumbs.db

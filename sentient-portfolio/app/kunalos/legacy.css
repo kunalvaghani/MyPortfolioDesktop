@@ -1,0 +1,27 @@
+.legacy-page { min-height: 100vh; background: #eef1f5; color: #171a21; }
+.legacy-nav, .legacy-hero, .legacy-decision, .legacy-feature-list { width: min(calc(100% - 48px), 1120px); margin-inline: auto; }
+.legacy-nav { display: flex; min-height: 78px; align-items: center; justify-content: space-between; gap: 24px; }
+.legacy-nav > a:last-child { display: inline-flex; min-height: 44px; align-items: center; color: #0b57d0; font-size: .78rem; font-weight: 700; }
+.legacy-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; padding: 90px 0 110px; }
+.legacy-copy h1 { margin: 0; font-size: clamp(4rem, 9vw, 7.6rem); letter-spacing: -.07em; line-height: .9; }
+.legacy-copy > p:not(.hero-eyebrow) { max-width: 620px; margin: 28px 0 0; color: #555f6d; font-size: 1rem; }
+.legacy-desktop { overflow: hidden; border: 4px solid #34363d; background: #c0c0c0; box-shadow: 15px 18px 0 #cbd9ef, 0 28px 70px rgba(31, 38, 52, .2); }
+.legacy-titlebar, .legacy-taskbar { display: flex; align-items: center; justify-content: space-between; min-height: 34px; padding: 5px 9px; background: #000080; color: white; font-family: Tahoma, Arial, sans-serif; font-size: .68rem; font-weight: 700; }
+.legacy-screen { position: relative; display: grid; grid-template-columns: 72px 72px 72px; gap: 14px; min-height: 330px; padding: 20px; background: #008080; }
+.legacy-icon { display: grid; height: 76px; place-items: center; color: white; font-family: Tahoma, Arial, sans-serif; font-size: .61rem; text-align: center; text-shadow: 1px 1px #000; }
+.legacy-icon i { display: block; width: 30px; height: 30px; border: 2px solid white; background: #0b57d0; box-shadow: 2px 2px #222; }
+.legacy-window { position: absolute; right: 25px; bottom: 28px; width: 68%; min-height: 145px; padding: 36px 18px 18px; border: 3px outset #eee; background: #c0c0c0; font-family: Tahoma, Arial, sans-serif; }
+.legacy-window > div { position: absolute; top: 2px; right: 2px; left: 2px; padding: 4px 7px; background: #000080; color: white; font-size: .61rem; font-weight: 700; }
+.legacy-window strong { font-size: 1rem; }
+.legacy-window p { margin: 7px 0 0; font-size: .67rem; }
+.legacy-taskbar { justify-content: flex-start; gap: 18px; background: #c0c0c0; color: #111; }
+.legacy-taskbar strong { padding: 3px 8px; border: 2px outset white; }
+.legacy-decision { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; padding: 70px; border-radius: 34px 34px 34px 10px; background: #171a21; color: white; }
+.legacy-decision h2 { margin: 0; font-size: clamp(2rem, 4vw, 3.6rem); letter-spacing: -.05em; line-height: 1.05; }
+.legacy-decision > p { margin: 0; color: #c7cfda; font-size: .91rem; }
+.legacy-feature-list { padding: 100px 0; }
+.legacy-feature-list ul { margin: 0; padding: 0; border-top: 1px solid #cbd1d9; list-style: none; }
+.legacy-feature-list li { display: grid; grid-template-columns: 60px 1fr; gap: 20px; padding: 20px 0; border-bottom: 1px solid #cbd1d9; font-size: .9rem; font-weight: 620; }
+.legacy-feature-list li span { color: #0b57d0; font-family: Consolas, monospace; font-size: .68rem; }
+@media (max-width: 780px) { .legacy-hero, .legacy-decision { grid-template-columns: 1fr; } .legacy-hero { padding-top: 55px; } .legacy-decision { gap: 28px; padding: 38px 28px; } }
+@media (max-width: 560px) { .legacy-nav, .legacy-hero, .legacy-decision, .legacy-feature-list { width: min(calc(100% - 32px), 1120px); } .legacy-nav > a:last-child { max-width: 140px; text-align: right; } .legacy-screen { min-height: 270px; } .legacy-window { width: 80%; } }
