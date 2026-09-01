@@ -224,7 +224,6 @@ async function verifyHome(client, viewport) {
     'https://www.linkedin.com/in/kunal-vaghani-b19217235/',
     'https://github.com/kunalvaghani/Local-AI-System-Lab',
     'mailto:kunalvaghani35@gmail.com',
-    '/kunalos',
   ]) {
     if (!report.hrefs.includes(href)) fail(`Missing required link: ${href}`);
   }

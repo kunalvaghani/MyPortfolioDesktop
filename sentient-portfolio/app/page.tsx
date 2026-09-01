@@ -310,7 +310,6 @@ export default function Home() {
             <a href="#projects">Projects</a>
             <a href="#experience">Experience</a>
             <a href={`mailto:${profile.email}`}>Email</a>
-            <a href="/kunalos">Legacy KunalOS <ArrowIcon /></a>
           </div>
           <p className="footer-note">Built as a lightweight Next.js portfolio. No hosted AI endpoint required.</p>
         </div>
