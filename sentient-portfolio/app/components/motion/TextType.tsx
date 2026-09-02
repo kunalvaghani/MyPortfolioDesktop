@@ -15,7 +15,7 @@ type TextTypeProps = {
 export function TextType({
   text,
   className,
-  initialDelay = 320,
+  initialDelay = 1120,
   typingSpeed = 27,
 }: TextTypeProps) {
   const [displayedText, setDisplayedText] = useState('');

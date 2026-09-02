@@ -298,7 +298,6 @@ async function verifyLegacy(client) {
 }
 
 async function verifyMotion(client) {
-  await evaluate(client, `sessionStorage.removeItem('kv-portfolio-intro-seen')`);
   await client.send('Page.reload');
   await waitForReady(client);
 
