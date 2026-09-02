@@ -8,6 +8,9 @@ type TextTypeProps = {
   className?: string;
   initialDelay?: number;
   typingSpeed?: number;
+  pauseDuration?: number;
+  deletingSpeed?: number;
+  restartDelay?: number;
 };
 
 // Interaction model adapted from ReactBits Text Type:
@@ -16,7 +19,10 @@ export function TextType({
   text,
   className,
   initialDelay = 1120,
-  typingSpeed = 27,
+  typingSpeed = 62,
+  pauseDuration = 2600,
+  deletingSpeed = 38,
+  restartDelay = 720,
 }: TextTypeProps) {
   const [displayedText, setDisplayedText] = useState('');
   const cursorRef = useRef<HTMLSpanElement>(null);
@@ -31,18 +37,38 @@ export function TextType({
     }
 
     let characterIndex = 0;
-    const typeNextCharacter = () => {
+    let deleting = false;
+
+    const animateText = () => {
+      if (deleting) {
+        characterIndex -= 1;
+        setDisplayedText(text.slice(0, characterIndex));
+
+        if (characterIndex === 0) {
+          deleting = false;
+          timers.push(setTimeout(animateText, restartDelay));
+          return;
+        }
+
+        timers.push(setTimeout(animateText, deletingSpeed));
+        return;
+      }
+
       characterIndex += 1;
       setDisplayedText(text.slice(0, characterIndex));
 
-      if (characterIndex < text.length) {
-        timers.push(setTimeout(typeNextCharacter, typingSpeed));
+      if (characterIndex === text.length) {
+        deleting = true;
+        timers.push(setTimeout(animateText, pauseDuration));
+        return;
       }
+
+      timers.push(setTimeout(animateText, typingSpeed));
     };
 
-    timers.push(setTimeout(typeNextCharacter, initialDelay));
+    timers.push(setTimeout(animateText, initialDelay));
     return () => timers.forEach(clearTimeout);
-  }, [initialDelay, text, typingSpeed]);
+  }, [deletingSpeed, initialDelay, pauseDuration, restartDelay, text, typingSpeed]);
 
   useEffect(() => {
     if (!cursorRef.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;

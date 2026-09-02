@@ -6,6 +6,9 @@ import { SectionHeading } from '@/app/components/portfolio/SectionHeading';
 import { MotionLayer } from '@/app/components/motion/MotionLayer';
 import { TextType } from '@/app/components/motion/TextType';
 import profilePortrait from '@/app/assets/kunal-vaghani.png';
+import openGlBackground from '@/app/assets/foundation/opengl-mario.webp';
+import vulkanBackground from '@/app/assets/foundation/vulkan-skull.webp';
+import pathfindingBackground from '@/app/assets/foundation/pathfinding-garden.webp';
 import {
   certifications,
   education,
@@ -20,6 +23,7 @@ import {
 } from '@/app/data/portfolio';
 
 const siteUrl = 'https://kunal-vaghani-portfolio.vercel.app';
+const foundationBackgrounds = [openGlBackground, vulkanBackground, pathfindingBackground];
 
 function ArrowIcon() {
   return <span aria-hidden="true">↗</span>;
@@ -282,15 +286,25 @@ export default function Home() {
             description="These projects are lower in the hierarchy, but they remain useful evidence of low-level C++, real-time constraints, and resource ownership."
           />
           <div className="foundation-grid">
-            {foundationProjects.map((project) => (
-              <article key={project.title}>
-                <div className="foundation-icon" aria-hidden="true"><span /></div>
-                <h3>{project.title}</h3>
-                <p>{project.description}</p>
-                <div className="tag-list">
-                  {project.tags.map((tag) => <span key={tag}>{tag}</span>)}
+            {foundationProjects.map((project, index) => (
+              <article className="foundation-card" key={project.title}>
+                <Image
+                  className="foundation-card-image"
+                  src={foundationBackgrounds[index]}
+                  alt=""
+                  fill
+                  sizes="(max-width: 880px) calc(100vw - 48px), 33vw"
+                />
+                <span className="foundation-card-overlay" aria-hidden="true" />
+                <div className="foundation-card-content">
+                  <div className="foundation-icon" aria-hidden="true"><span /></div>
+                  <h3>{project.title}</h3>
+                  <p>{project.description}</p>
+                  <div className="tag-list">
+                    {project.tags.map((tag) => <span key={tag}>{tag}</span>)}
+                  </div>
+                  <a href={project.href} target="_blank" rel="noreferrer">View source evidence <ArrowIcon /></a>
                 </div>
-                <a href={project.href} target="_blank" rel="noreferrer">View source evidence <ArrowIcon /></a>
               </article>
             ))}
           </div>

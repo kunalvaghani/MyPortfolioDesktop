@@ -201,6 +201,10 @@ async function verifyHome(client, viewport) {
       interactive,
       nextError: Boolean(document.querySelector('[data-nextjs-dialog], nextjs-portal')),
       menuButton: Boolean(document.querySelector('.menu-button')),
+      foundationImages: [...document.querySelectorAll('.foundation-card-image')].map((image) => ({
+        loaded: image.complete && image.naturalWidth > 0,
+        src: image.currentSrc || image.src,
+      })),
       resumeLink: (() => {
         const link = document.querySelector('a[href="/Kunal_Vaghani_Resume.pdf"]');
         return link ? { download: link.getAttribute('download'), text: link.textContent.trim() } : null;
@@ -214,6 +218,7 @@ async function verifyHome(client, viewport) {
   if (report.bodyText.includes('KUNALOS PORTFOLIO BIOS')) fail('Legacy BIOS is visible on the root route.');
   if (report.nextError) fail('Next.js error overlay detected.');
   if (report.scrollWidth > report.innerWidth + 2) fail(`Horizontal overflow: ${report.scrollWidth}px > ${report.innerWidth}px.`);
+  if (report.foundationImages.length !== 3) fail('Expected three foundation-card background images.');
   if (!report.resumeLink) fail('Missing résumé download link.');
   if (report.resumeLink?.download !== 'Kunal_Vaghani_Resume.pdf') fail('Résumé link is missing its download filename.');
 
@@ -307,7 +312,7 @@ async function verifyMotion(client) {
   })()`);
   if (!introVisible) fail('First-visit intro did not enter its visible state.');
 
-  await delay(1100);
+  await delay(1650);
   const settled = await evaluate(client, `(() => {
     const typedText = document.querySelector('.hero-role span[aria-hidden="true"]')?.textContent || '';
     const firstProject = document.querySelector('.project-card');
@@ -319,10 +324,41 @@ async function verifyMotion(client) {
   })()`);
   await delay(900);
   const projectOpacity = await evaluate(client, `getComputedStyle(document.querySelector('.project-card')).opacity`);
+  await evaluate(client, `document.querySelector('.foundation-section')?.scrollIntoView({ block: 'center' })`);
+  await delay(900);
+  const foundationState = await evaluate(client, `({
+    animationName: getComputedStyle(document.querySelector('.foundation-card-image')).animationName,
+    allImagesLoaded: [...document.querySelectorAll('.foundation-card-image')].every((image) => image.complete && image.naturalWidth > 0),
+  })`);
+
+  const textLooped = await evaluate(client, `(async () => {
+    const visualText = document.querySelector('.hero-role span[aria-hidden="true"]');
+    const fullText = document.querySelector('.hero-role .sr-only')?.textContent || '';
+    let reachedFullText = visualText?.textContent === fullText;
+
+    return new Promise((resolve) => {
+      const startedAt = Date.now();
+      const interval = setInterval(() => {
+        const currentText = visualText?.textContent || '';
+        reachedFullText ||= currentText === fullText;
+
+        if (reachedFullText && currentText.length < fullText.length) {
+          clearInterval(interval);
+          resolve(true);
+        } else if (Date.now() - startedAt > 8000) {
+          clearInterval(interval);
+          resolve(false);
+        }
+      }, 100);
+    });
+  })()`);
 
   if (!settled.introRemoved) fail('First-visit intro did not leave the page after its short sequence.');
   if (settled.typedCharacters < 8) fail('Hero type animation did not produce visible text.');
+  if (!textLooped) fail('Hero type animation did not reach its delete-and-repeat loop.');
   if (Number(projectOpacity) < 0.99) fail('Scroll-revealed project did not settle at full opacity.');
+  if (!foundationState.allImagesLoaded) fail('Foundation-card backgrounds did not load when scrolled into view.');
+  if (foundationState.animationName !== 'foundation-drift') fail('Foundation-card background loop is not active.');
 }
 
 async function main() {
@@ -369,6 +405,7 @@ async function main() {
     await client.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
     await navigate(client, baseUrl);
     await verifyMotion(client);
+    await capture(client, 'desktop-motion-foundation');
 
     activeViewport = 'legacy-mobile';
     await client.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
