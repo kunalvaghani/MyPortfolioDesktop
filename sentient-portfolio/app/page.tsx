@@ -3,6 +3,8 @@ import { ArchitectureDiagram } from '@/app/components/portfolio/ArchitectureDiag
 import { Navigation } from '@/app/components/portfolio/Navigation';
 import { ProjectCard } from '@/app/components/portfolio/ProjectCard';
 import { SectionHeading } from '@/app/components/portfolio/SectionHeading';
+import { MotionLayer } from '@/app/components/motion/MotionLayer';
+import { TextType } from '@/app/components/motion/TextType';
 import profilePortrait from '@/app/assets/kunal-vaghani.png';
 import {
   certifications,
@@ -39,6 +41,14 @@ function LinkedInIcon() {
   );
 }
 
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M11 3h2v10.17l3.59-3.58L18 11l-6 6-6-6 1.41-1.41L11 13.17V3Zm-6 16h14v2H5v-2Z" />
+    </svg>
+  );
+}
+
 export default function Home() {
   const personJsonLd = {
     '@context': 'https://schema.org',
@@ -62,6 +72,7 @@ export default function Home() {
 
   return (
     <>
+      <MotionLayer />
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <Navigation />
       <main id="main-content">
@@ -70,11 +81,14 @@ export default function Home() {
             <div className="hero-copy">
               <p className="hero-eyebrow"><span aria-hidden="true" />{profile.eyebrow}</p>
               <h1>{profile.name}</h1>
-              <p className="hero-role">{profile.headline}</p>
+              <TextType className="hero-role" text={profile.headline} />
               <p className="hero-intro">{profile.introduction}</p>
 
               <div className="hero-actions">
-                <a className="button button-primary" href="#profile">About and education <span aria-hidden="true">↓</span></a>
+                <a className="button button-primary" href="/Kunal_Vaghani_Resume.pdf" download="Kunal_Vaghani_Resume.pdf">
+                  <DownloadIcon /> Download résumé
+                </a>
+                <a className="button button-secondary" href="#projects">View projects <span aria-hidden="true">↓</span></a>
                 <a className="button button-secondary" href={profile.github} target="_blank" rel="noreferrer">
                   <GitHubIcon /> GitHub
                 </a>
@@ -89,7 +103,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="hero-portrait">
+            <div className="hero-portrait" data-parallax="portrait">
               <div className="portrait-frame">
                 <Image
                   src={profilePortrait}
@@ -110,7 +124,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section page-shell profile-section" id="profile">
+        <section className="section page-shell profile-section" id="profile" data-reveal>
           <div className="profile-heading">
             <SectionHeading
               eyebrow="About Kunal"
@@ -160,7 +174,7 @@ export default function Home() {
         </section>
 
         <section className="section skills-section" id="skills">
-          <div className="page-shell">
+          <div className="page-shell" data-reveal>
             <SectionHeading
               eyebrow="Capabilities"
               title="What I work with, grouped by engineering domain."
@@ -180,7 +194,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section page-shell" id="systems">
+        <section className="section page-shell" id="systems" data-reveal>
           <SectionHeading
             eyebrow="Current engineering focus"
             title="One platform. Three connected systems tracks."
@@ -211,7 +225,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section page-shell methodology-section" id="method">
+        <section className="section page-shell methodology-section" id="method" data-reveal>
           <SectionHeading
             eyebrow="Engineering method"
             title="“It works” is the beginning of the investigation."
@@ -233,7 +247,7 @@ export default function Home() {
         </section>
 
         <section className="section experience-section" id="experience">
-          <div className="page-shell split-heading">
+          <div className="page-shell split-heading" data-reveal>
             <SectionHeading
               eyebrow="Experience"
               title="Real-time systems became the foundation for local AI infrastructure."
@@ -245,7 +259,7 @@ export default function Home() {
 
           <div className="page-shell timeline">
             {experience.map((item, index) => (
-              <article className="timeline-item" key={item.organization}>
+              <article className="timeline-item" key={item.organization} data-reveal>
                 <div className="timeline-marker"><span>{String(index + 1).padStart(2, '0')}</span></div>
                 <div className="timeline-content">
                   <p className="timeline-period">{item.period}</p>
@@ -261,7 +275,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section page-shell foundation-section" id="foundation">
+        <section className="section page-shell foundation-section" id="foundation" data-reveal>
           <SectionHeading
             eyebrow="Systems & graphics foundation"
             title="Previous work, reframed by what it proves."
@@ -283,7 +297,7 @@ export default function Home() {
         </section>
 
         <section className="contact-section" id="contact">
-          <div className="page-shell contact-card">
+          <div className="page-shell contact-card" data-reveal>
             <div>
               <p className="section-eyebrow">Let’s build useful systems</p>
               <h2>Interested in local AI, retrieval, or performance engineering?</h2>
@@ -309,6 +323,7 @@ export default function Home() {
           <div className="footer-links">
             <a href="#projects">Projects</a>
             <a href="#experience">Experience</a>
+            <a href="/Kunal_Vaghani_Resume.pdf" download="Kunal_Vaghani_Resume.pdf">Résumé</a>
             <a href={`mailto:${profile.email}`}>Email</a>
           </div>
           <p className="footer-note">Built as a lightweight Next.js portfolio. No hosted AI endpoint required.</p>

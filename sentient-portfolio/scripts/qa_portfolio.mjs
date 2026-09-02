@@ -201,6 +201,10 @@ async function verifyHome(client, viewport) {
       interactive,
       nextError: Boolean(document.querySelector('[data-nextjs-dialog], nextjs-portal')),
       menuButton: Boolean(document.querySelector('.menu-button')),
+      resumeLink: (() => {
+        const link = document.querySelector('a[href="/Kunal_Vaghani_Resume.pdf"]');
+        return link ? { download: link.getAttribute('download'), text: link.textContent.trim() } : null;
+      })(),
     };
   })()`);
 
@@ -210,6 +214,8 @@ async function verifyHome(client, viewport) {
   if (report.bodyText.includes('KUNALOS PORTFOLIO BIOS')) fail('Legacy BIOS is visible on the root route.');
   if (report.nextError) fail('Next.js error overlay detected.');
   if (report.scrollWidth > report.innerWidth + 2) fail(`Horizontal overflow: ${report.scrollWidth}px > ${report.innerWidth}px.`);
+  if (!report.resumeLink) fail('Missing résumé download link.');
+  if (report.resumeLink?.download !== 'Kunal_Vaghani_Resume.pdf') fail('Résumé link is missing its download filename.');
 
   for (const section of ['systems', 'projects', 'experience', 'skills', 'education', 'contact']) {
     if (!report.sections.includes(section)) fail(`Missing major section #${section}.`);
@@ -224,11 +230,26 @@ async function verifyHome(client, viewport) {
     'https://www.linkedin.com/in/kunal-vaghani-b19217235/',
     'https://github.com/kunalvaghani/Local-AI-System-Lab',
     'mailto:kunalvaghani35@gmail.com',
+    '/Kunal_Vaghani_Resume.pdf',
   ]) {
     if (!report.hrefs.includes(href)) fail(`Missing required link: ${href}`);
   }
 
   if (report.hrefs.some((href) => href?.startsWith('tel:'))) fail('A private phone link is published.');
+
+  const resumeResponse = await evaluate(client, `(async () => {
+    const response = await fetch('/Kunal_Vaghani_Resume.pdf');
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    return {
+      ok: response.ok,
+      contentType: response.headers.get('content-type') || '',
+      signature: String.fromCharCode(...bytes.slice(0, 5)),
+      size: bytes.length,
+    };
+  })()`);
+  if (!resumeResponse.ok) fail('Résumé PDF request failed.');
+  if (!resumeResponse.contentType.includes('application/pdf')) fail(`Unexpected résumé content type: ${resumeResponse.contentType}`);
+  if (resumeResponse.signature !== '%PDF-' || resumeResponse.size < 10_000) fail('Résumé download is not a valid PDF payload.');
 
   const smallTargets = report.interactive.filter((item) => item.width < 40 || item.height < 40);
   if (smallTargets.length > 0) {
@@ -276,6 +297,35 @@ async function verifyLegacy(client) {
   if (report.overflow > 2) fail(`Legacy route has ${report.overflow}px horizontal overflow.`);
 }
 
+async function verifyMotion(client) {
+  await evaluate(client, `sessionStorage.removeItem('kv-portfolio-intro-seen')`);
+  await client.send('Page.reload');
+  await waitForReady(client);
+
+  const introVisible = await evaluate(client, `(() => {
+    const intro = document.querySelector('.page-intro');
+    return Boolean(intro) && getComputedStyle(intro).visibility === 'visible';
+  })()`);
+  if (!introVisible) fail('First-visit intro did not enter its visible state.');
+
+  await delay(1100);
+  const settled = await evaluate(client, `(() => {
+    const typedText = document.querySelector('.hero-role span[aria-hidden="true"]')?.textContent || '';
+    const firstProject = document.querySelector('.project-card');
+    firstProject?.scrollIntoView({ block: 'center' });
+    return {
+      introRemoved: !document.querySelector('.page-intro'),
+      typedCharacters: typedText.length,
+    };
+  })()`);
+  await delay(900);
+  const projectOpacity = await evaluate(client, `getComputedStyle(document.querySelector('.project-card')).opacity`);
+
+  if (!settled.introRemoved) fail('First-visit intro did not leave the page after its short sequence.');
+  if (settled.typedCharacters < 8) fail('Hero type animation did not produce visible text.');
+  if (Number(projectOpacity) < 0.99) fail('Scroll-revealed project did not settle at full opacity.');
+}
+
 async function main() {
   await mkdir(artifactsDir, { recursive: true });
   await mkdir(userDataDir, { recursive: true });
@@ -314,6 +364,12 @@ async function main() {
       await verifyHome(client, viewport);
       await capture(client, `${viewport.name}-home`);
     }
+
+    activeViewport = 'desktop-motion';
+    await client.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false });
+    await client.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+    await navigate(client, baseUrl);
+    await verifyMotion(client);
 
     activeViewport = 'legacy-mobile';
     await client.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });

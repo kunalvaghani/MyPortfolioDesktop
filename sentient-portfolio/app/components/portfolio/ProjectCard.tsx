@@ -12,7 +12,7 @@ const stateLabels: Record<DeliveryState, string> = {
 
 export function ProjectCard({ project }: { project: FlagshipProject }) {
   return (
-    <article className="project-card">
+    <article className="project-card" data-reveal>
       <div className="project-card-header">
         <div>
           <p className="project-kicker"><span>{project.number}</span>{project.kicker}</p>
